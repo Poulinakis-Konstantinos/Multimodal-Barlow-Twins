@@ -104,10 +104,14 @@ class Gaussian_noise(object):
         self.std = std
 
     def __call__(self, tensor):
+        
         # torch.randn samples for a Normal distribution with mean=0 and std=1.
         if not isinstance(tensor, torch.Tensor):
             tensor = torch.tensor(tensor)
-        return tensor + torch.randn(tensor.size())*self.std + self.mean
+        #TODO get the device directly from config (?) or somehow pass it into the transformation 
+        device = tensor.device   
+        tensor.to(device)
+        return tensor + torch.randn(tensor.size()).to(device)*self.std + self.mean
 
     def __repr__(self):
         return self.__class__.__name__ + '(mean={0}, std={1})'.format(self.mean, self.std)
