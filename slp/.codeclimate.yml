@@ -1,0 +1,21 @@
+languages:
+  Python: true
+
+engines:
+  radon:
+    enabled: true
+  shellcheck:
+    enabled: true
+
+ratings:
+  paths:
+    - "slp/"
+    - "examples/"
+
+checks:
+  argument-count:
+    config:
+      # We are writting ML code here.
+      # large number of args in __init__ is the default
+      threshold: 30
+
