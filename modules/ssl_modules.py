@@ -311,11 +311,12 @@ class Multimodal_Barlow_Twins(nn.Module):
                 lengths["text"]
             ))
 
-class mySequential(nn.Sequential):
-    def forward(self, *inputs):
-        for module in self._modules.values():
-            if type(inputs) == tuple:
-                inputs = module(*inputs)
-            else:
-                inputs = module(inputs)
-        return inputs
+# class mySequential(nn.Sequential):
+# ''' Used as a workaround so that nn.Sequential accepts multiple inputs'''
+#     def forward(self, *inputs):
+#         for module in self._modules.values():
+#             if type(inputs) == tuple:
+#                 inputs = module(*inputs)
+#             else:
+#                 inputs = module(inputs)
+#         return inputs
