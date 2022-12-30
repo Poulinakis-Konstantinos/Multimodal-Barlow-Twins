@@ -40,7 +40,7 @@ class Barlow_Twins_Loss(nn.Module):
         super(Barlow_Twins_Loss, self).__init__()
         self.alpha = alpha
 
-    def forward(self, cross_corr, target):
+    def forward(self, cross_corr, target=1):
         '''cross_corr (2D torch.tensor): Two dimensional cross correlation matrix of 2 vectors.'''
         on_diag = torch.diagonal(cross_corr).add_(-1).pow_(2).sum()
         off_diag = off_diagonal(cross_corr).pow_(2).sum()
@@ -59,17 +59,21 @@ class BT_Loss_metric(Metric):
         self.add_state("total", default=torch.tensor(0, dtype=torch.float),
                        dist_reduce_fx="sum")
         self.alpha = alpha
+        self.Bt = Barlow_Twins_Loss(self.alpha)
 
     def update(self, preds: torch.Tensor, target: torch.Tensor):
         #preds = self._input_format(preds)
 
-        self.total += 1
+        self.total = self.total +  1
+        target = preds
+        #print('Preds ', target.size(), target)
 
-        on_diag = torch.diagonal(preds).add_(-1).pow_(2).sum()
-        off_diag = off_diagonal(preds).pow_(2).sum()
-        self.correct += on_diag + self.alpha * off_diag
+        self.correct += self.Bt(preds)
+       # print('Self.correct shape :', self.correct.size(), self.correct)
 
     def compute(self):
+       # print('Self.total ', self.total)
+       # print(self.correct / self.total)
         return self.correct / self.total
 
 
@@ -160,6 +164,8 @@ class Multimodal_Barlow_Twins(nn.Module):
     def __init__(
         self,
         feature_sizes,
+        num_classes = 1,
+        ssl_mode = True,
         mm_aug_probs=[0.2, 0.2],
         gauss_noise_m=[0.0, 0.0],
         gauss_noise_std=[0.1, 0.1],
@@ -187,13 +193,11 @@ class Multimodal_Barlow_Twins(nn.Module):
             3. Barlow Twins Loss  (Cross correlation matrix should converge to the Identity matrix.)
 
             Args:
-                augmentation_module (MM_Aug object): A transformation applied on each unimodal input to create two different views of the same 'object'.
-                                                     Defaults to an 'mm_aug'.
-                mm_aug_probs (list[float]) : Two values that define the probability of applying mm_aug to the input.  
-                gauss_noise_m (list[float]) : The mean values of the gaussian noises applied as transformations.
-                gauss_noise_std (list[float]) : The std of the gaussian noises applied as transformations.
-                gauss_noise_p  (list[float]) : The probabilities of applying gaussian noises.
+
                 feature_sizes (dict[int]) : Contains the dimensionality of the features for each modality. E.g. {'text':100, 'audio'=500}
+                num_classes (int) : Number of neurons in the classification layer.
+                ssl_mode (boolean) : Whether model is in trainign mode or not. In training mode it passes inputs through projector and outputs cross correlation matrix.
+                                     When not in training mode it outputs predictions through the clf layer and ignores projection layer.
                 num_layers (int) : The number of layers used in each unimodal encoder. See AudioVisualTextEncoder class in baseline.py for more info.
                 bidirectional (bool) : Whether RNNs in unimodal encoders are bidirectional or not (where applicable).
                 rnn_type (str) : The type of RNN used in unimodal encoders. One of 'lstm' or 'gru'. Defaults to 'lstm;.
@@ -212,10 +216,18 @@ class Multimodal_Barlow_Twins(nn.Module):
                 masking (bool): use M3 with no re-scaling. Defaults to False.
                 m3_sequential (bool): per timestep modality masking. Defaults to False.
                 m3_augment (function) : Augmentation applied to the inputs. Different than the one applied to create different views for Siamese Networks. Defaults to None.
+                                augmentation_module (MM_Aug object): A transformation applied on each unimodal input to create two different views of the same 'object'.
+                                                     Defaults to an 'mm_aug'.
+                mm_aug_probs (list[float]) : Two values that define the probability of applying mm_aug to the input.  
+                gauss_noise_m (list[float]) : The mean values of the gaussian noises applied as transformations.
+                gauss_noise_std (list[float]) : The std of the gaussian noises applied as transformations.
+                gauss_noise_p  (list[float]) : The probabilities of applying gaussian noises.
                 **(kwargs)
             '''
 
         super(Multimodal_Barlow_Twins, self).__init__()
+        self.ssl_mode = ssl_mode
+        print('Self-Training :',self.ssl_mode)
         self.transformations = Transform(
             mm_aug_probs[0], mm_aug_probs[1],
             gauss_noise_p[0], gauss_noise_p[1],
@@ -255,6 +267,7 @@ class Multimodal_Barlow_Twins(nn.Module):
         self.projector = nn.Sequential(*layers)
         # normalization layer for the representations z1 and z2
         self.bn = nn.BatchNorm1d(sizes[-1], affine=False)
+        self.clf = nn.Linear(self.encoder.out_size, num_classes)
 
     def forward(self, inputs: dict, lengths):
         ''' Given a multimodal input, apply transformations to create multiple views,
@@ -266,27 +279,43 @@ class Multimodal_Barlow_Twins(nn.Module):
         # create two views of the same input. We use a different set of augmentations for each input.
         inputs1 = {}
         inputs2 = {}
-        for modality in inputs.keys():  # ['text', 'audio', 'visual'] :
-            inputs1[modality], inputs2[modality] = self.transformations(
-                inputs[modality])
+        for modality in ['text', 'audio', 'visual'] :
+            inputs1[modality], inputs2[modality] = self.transformations(inputs[modality])
             #inputs1, inputs2 = self.transformations(inputs)
 
-        # fused Encoder's output
-        z1 = self.projector(self.encoder(
-            inputs1["text"],
-            inputs1["audio"],
-            inputs1["visual"],
-            lengths["text"]
-        ))
+        if self.ssl_mode :
+            # fused Encoder's output
+            z1 = self.projector(self.encoder(
+                inputs1["text"],
+                inputs1["audio"],
+                inputs1["visual"],
+                lengths["text"]
+            ))
 
-        z2 = self.projector(self.encoder(
-            inputs2["text"],
-            inputs2["audio"],
-            inputs2["visual"],
-            lengths["text"]
-        ))
+            z2 = self.projector(self.encoder(
+                inputs2["text"],
+                inputs2["audio"],
+                inputs2["visual"],
+                lengths["text"]
+            ))
 
-        # empirical cross-correlation matrix
-        cross_corr = self.bn(z1).T @ self.bn(z2)
+            # empirical cross-correlation matrix
+            cross_corr = self.bn(z1).T @ self.bn(z2)
+            return cross_corr
+        # classification
+        else :
+            return self.clf(self.encoder(
+                inputs1["text"],
+                inputs1["audio"],
+                inputs1["visual"],
+                lengths["text"]
+            ))
 
-        return cross_corr
+class mySequential(nn.Sequential):
+    def forward(self, *inputs):
+        for module in self._modules.values():
+            if type(inputs) == tuple:
+                inputs = module(*inputs)
+            else:
+                inputs = module(inputs)
+        return inputs
