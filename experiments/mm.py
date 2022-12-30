@@ -128,7 +128,7 @@ if __name__ == "__main__":
             optimizer, **config.lr_schedule
         )
 
-    criterion = Barlow_Twins_Loss(alpha=0.000)  # nn.L1Loss()
+    criterion = Barlow_Twins_Loss(alpha=config.barlow_twins.alpha)  # nn.L1Loss()
 
     lm = RnnPLModule(
         model,
@@ -136,7 +136,7 @@ if __name__ == "__main__":
         criterion,
         lr_scheduler=lr_scheduler,
         metrics={
-            "BT_loss" : BT_Loss_metric(alpha=0.00)
+            "BT_loss" : BT_Loss_metric(alpha=config.barlow_twins.alpha)
         },
     )
 
