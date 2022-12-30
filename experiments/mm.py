@@ -6,7 +6,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(
 
 from utils.mosei import get_mosei_parser
 from utils.metrics import MoseiAcc2, MoseiAcc5, MoseiAcc7, MoseiF1
-from modules.ssl_modules import Multimodal_Barlow_Twins, Barlow_Twins_Loss, BT_Loss_metric, mySequential
+from modules.ssl_modules import Multimodal_Barlow_Twins, Barlow_Twins_Loss, BT_Loss_metric
 from modules.baseline import AudioVisualTextMaskedClassifier
 from modules.classifier import RNNSymAttnFusionRNNClassifier
 from utils.multimodal import MOSEI
