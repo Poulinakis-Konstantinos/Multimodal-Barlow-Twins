@@ -6,12 +6,13 @@ sys.path.insert(0, os.path.join(os.path.dirname(
 
 from utils.mosei import get_mosei_parser
 from utils.metrics import MoseiAcc2, MoseiAcc5, MoseiAcc7, MoseiF1
-from modules.ssl_modules import Multimodal_Barlow_Twins, Barlow_Twins_Loss, BT_Loss_metric
+from modules.ssl_modules import Multimodal_Barlow_Twins, Barlow_Twins_Loss, BT_Loss_metric, mySequential
 from modules.baseline import AudioVisualTextMaskedClassifier
 from modules.classifier import RNNSymAttnFusionRNNClassifier
 from utils.multimodal import MOSEI
 from utils.collators import MultimodalSequenceClassificationCollator
 from utils.cmusdk import mosei
+from utils.mosei import test_mosei
 
 import pytorch_lightning as pl
 import torch.nn as nn
@@ -26,7 +27,7 @@ from slp.util.log import configure_logging
 from slp.util.system import is_file, safe_mkdirs
 from torch.optim import Adam
 import torch.optim as optim
-
+from torch import load
 
 
 if __name__ == "__main__":
@@ -84,11 +85,12 @@ if __name__ == "__main__":
         num_workers=config.data.num_workers,
     )
     ldm.setup()
-
     feature_sizes = config.model.feature_sizes
 
     model = Multimodal_Barlow_Twins(
         feature_sizes,
+        num_classes = 1,
+        ssl_mode = True,
         num_layers=config.model.num_layers,
         projector_size=config.barlow_twins.projector_size,
         mm_aug_probs=config.transformations.mm_aug_p,
@@ -113,11 +115,6 @@ if __name__ == "__main__":
         # p_aug=config.model.p_augment,
     )
 
-    #print(model)
-    #print(type(train_data))
-    #print(train_data[0]['visual'])
-    #model(train_data[0], {'text':100})
-   # exit()
     optimizer = Adam(
         [p for p in model.parameters() if p.requires_grad],
         lr=config.optim.lr,
@@ -131,7 +128,7 @@ if __name__ == "__main__":
             optimizer, **config.lr_schedule
         )
 
-    criterion = Barlow_Twins_Loss(alpha=0.005)  # nn.L1Loss()
+    criterion = Barlow_Twins_Loss(alpha=0.000)  # nn.L1Loss()
 
     lm = RnnPLModule(
         model,
@@ -139,14 +136,7 @@ if __name__ == "__main__":
         criterion,
         lr_scheduler=lr_scheduler,
         metrics={
-            "BT_loss" : BT_Loss_metric(alpha=0.005)
-        #     "acc2": MoseiAcc2(exclude_neutral=True),
-        #     "acc2_zero": MoseiAcc2(exclude_neutral=False),
-        #     "acc5": MoseiAcc5(),
-        #     "acc7": MoseiAcc7(),
-        #     "f1": MoseiF1(exclude_neutral=True),
-        #     "f1_zero": MoseiF1(exclude_neutral=False),
-        #     "mae": torchmetrics.MeanAbsoluteError(),
+            "BT_loss" : BT_Loss_metric(alpha=0.00)
         },
     )
 
@@ -155,11 +145,56 @@ if __name__ == "__main__":
 
     trainer.fit(lm, datamodule=ldm)
 
-    exit()
-    from utils.mosei import test_mosei
+    # # cut projector head and add clf on top
+    # model.projector, model.bn = nn.Identity(), nn.Identity()
+    #num_classes = 1
+    #clf = nn.Linear(model.encoder.out_size, num_classes)
+    # model = nn.Sequential(model, clf)
+    # print(model)
+    model_pred = Multimodal_Barlow_Twins(
+        feature_sizes,
+        num_classes = 1,
+        ssl_mode = False,
+        num_layers=config.model.num_layers,
+        projector_size=config.barlow_twins.projector_size,
+        mm_aug_probs=config.transformations.mm_aug_p,
+        gauss_noise_p=config.transformations.gauss_noise_p,
+        bidirectional=config.model.bidirectional,
+        rnn_type=config.model.rnn_type,
+        hidden_size=config.model.hidden_size,
+        p_drop_modalities=config.model.p_drop_modalities,
+    )
 
-    results = test_mosei(lm, ldm, trainer, modalities)
+    lm_clf = RnnPLModule(
+        model_pred,
+        optimizer,
+        nn.L1Loss(),
+        lr_scheduler=lr_scheduler,
+        metrics={
+             "acc2": MoseiAcc2(exclude_neutral=True),
+             "acc2_zero": MoseiAcc2(exclude_neutral=False),
+             "acc5": MoseiAcc5(),
+             "acc7": MoseiAcc7(),
+             "f1": MoseiF1(exclude_neutral=True),
+             "f1_zero": MoseiF1(exclude_neutral=False),
+             "mae": torchmetrics.MeanAbsoluteError(),
+        },
+    )
+    ckpt_path = trainer.checkpoint_callback.best_model_path
+    ckpt = load(ckpt_path, map_location="cpu")
+    lm_clf.load_state_dict(ckpt["state_dict"])
+    lm_clf = lm_clf.cuda()
+
+    #print(lm_clf.model)
+    # lm_clf.model.projector, lm_clf.model.bn = nn.Identity(), nn.Identity()
+    # lm_clf.model = mySequential(lm_clf.model, clf)
+    # print(lm_clf.model)
+
+    results = test_mosei(lm_clf, ldm, trainer, modalities, load_best=False)
+    print(' RESULTS ')
     print(results)
+
+    exit()
 
     # uncomment the following lines if you want result logging for multiple runs
 
