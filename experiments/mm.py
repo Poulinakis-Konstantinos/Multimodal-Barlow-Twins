@@ -3,7 +3,7 @@ import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(
     os.path.realpath(__file__)), "../"))
-
+import wandb
 from utils.mosei import get_mosei_parser
 from utils.metrics import MoseiAcc2, MoseiAcc5, MoseiAcc7, MoseiF1
 from modules.ssl_modules import Multimodal_Barlow_Twins, Barlow_Twins_Loss, BT_Loss_metric
@@ -36,8 +36,8 @@ if __name__ == "__main__":
 
     config = parse_config(parser, parser.parse_args().config)
 
-    if config.trainer.experiment_name != "Multimodal_Barlow_Twins":
-        config.trainer.experiment_name = "Multimodal_Barlow_Twins"
+    # if config.trainer.experiment_name != "Multimodal_Barlow_Twins":
+    #     config.trainer.experiment_name = "Multimodal_Barlow_Twins"
 
     configure_logging(f"logs/{config.trainer.experiment_name}")
     modalities = set(config.modalities)
@@ -191,6 +191,12 @@ if __name__ == "__main__":
     # print(lm_clf.model)
 
     results = test_mosei(lm_clf, ldm, trainer, modalities, load_best=False)
+    wandb.log({'mae': results['mae'], 'corr': results['corr'], 'acc_7':results['acc_7'], 'acc_5': results['acc_5'],
+              'f1_pos':results['f1_pos'], 'bin_acc_pos': results['bin_acc_pos'],
+              'f1_neg': results['f1_neg'], 'bin_acc_neg' : results['bin_acc_neg'],
+              'f1':results['f1'], 'bin_acc' : results['bin_acc']})
+    wandb.save('/home/poulinakis/Multimodal-Barlow-Twins/configs/my-config.yml')
+
     print(' RESULTS ')
     print(results)
 
