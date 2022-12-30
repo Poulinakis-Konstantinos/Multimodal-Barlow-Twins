@@ -24,17 +24,18 @@ def patch_mosei_pickle(train_data, dev_data, test_data):
     return train_data, dev_data, test_data
 
 
-def test_mosei(lm, ldm, trainer, modalities):
+def test_mosei(lm, ldm, trainer, modalities, load_best=True):
     ckpt_path = trainer.checkpoint_callback.best_model_path
     test_loader = ldm.test_dataloader()
-    results = mosei_run_test(lm, test_loader, ckpt_path, modalities)
+    results = mosei_run_test(lm, test_loader, ckpt_path, modalities, load_best)
 
     return results
 
 
-def mosei_run_test(lm, test_loader, ckpt_path, modalities):
-    ckpt = torch.load(ckpt_path, map_location="cpu")
-    lm.load_state_dict(ckpt["state_dict"])
+def mosei_run_test(lm, test_loader, ckpt_path, modalities, load_best):
+    if load_best :
+        ckpt = torch.load(ckpt_path, map_location="cpu")
+        lm.load_state_dict(ckpt["state_dict"])
     lm = lm.cuda()
 
     preds = []
