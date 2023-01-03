@@ -198,6 +198,10 @@ if __name__ == "__main__":
     ckpt = load(ckpt_path, map_location="cpu")
     lm_clf.load_state_dict(ckpt["state_dict"])
     lm_clf = lm_clf.cuda()
+    
+    if config.eval.freeze_grads:
+        model.requires_grad_(False)
+        model.clf.requires_grad_(True)
 
     #print(lm_clf.model)
     # lm_clf.model.projector, lm_clf.model.bn = nn.Identity(), nn.Identity()
