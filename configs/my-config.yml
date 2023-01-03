@@ -38,13 +38,19 @@ transformations:
   gauss_noise_p: 
   - 0.5
   - 0.2
+  gauss_noise_mean:
+  - 0.0
+  - 0.0
+  gauss_noise_std:
+  - 0.1
+  - 0.2
 
 barlow_twins:
   alpha: 0.005
   projector_size: 
-  - 1000  
-  - 1000 
-  - 1000 
+  - 1200  
+  - 1200 
+  - 1200 
 
 preprocessing:
   pad_front: true
@@ -77,17 +83,15 @@ trainer:
   gpus: 1
   check_val_every_n_epoch: 1
   gradient_clip_val: 0
-  max_epochs: 1
+  max_epochs: 100
   force_wandb_offline: false
   early_stop_on: val_loss
   early_stop_mode: min
   experiment_name: Gaussian-Noise-Only-SSL-BT
   experiment_description: 'First trial for MMBT'
 debug: false
-
-eval:
+evaluating:
   freeze_grads: true
-  
 # tune:
 #   num_trials: 100
 #   gpus_per_trial: 0.5
@@ -109,4 +113,4 @@ modalities:
 - audio
 - visual
 
-config: configs/best.mosei.rnn.symattn.rnn.yml
+#config: configs/best.mosei.rnn.symattn.rnn.yml
