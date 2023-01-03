@@ -1,4 +1,4 @@
-model:
+model: 
   max_length: -1
   kernel_size: 33
   nystrom: false
@@ -6,8 +6,8 @@ model:
   num_layers: 1
   num_heads: 1
   dropout: 0.2
-  hidden_size: 10
-  inner_size: 10
+  hidden_size: 100
+  inner_size: 200
   prenorm: false
   scalenorm: false
   mmdrop_after_fuse: false
@@ -24,26 +24,27 @@ model:
   packed_sequence: true
   merge_bi: sum
   rnn_type: lstm
-  attention: false
+  attention: False
   multi_modal_drop: mmdrop_hard
   mmdrop_before_fuse: false
   p_mmdrop: 0.20
-  use_m3_masking: false
+  use_m3_masking: False
   use_m3_sequential: false
 
 transformations:
   mm_aug_p: 
-  - 0.2
-  - 0.2
+  - 0.
+  - 0.
   gauss_noise_p: 
   - 0.5
-  - 0.1
+  - 0.2
 
 barlow_twins:
   alpha: 0.005
   projector_size: 
-  - 2
-  - 2
+  - 1000  
+  - 1000 
+  - 1000 
 
 preprocessing:
   pad_front: true
@@ -73,16 +74,20 @@ trainer:
   - mosei
   - rnn-baseline
   stochastic_weight_avg: false
-  gpus: 0
+  gpus: 1
   check_val_every_n_epoch: 1
   gradient_clip_val: 0
-  max_epochs: 100
+  max_epochs: 1
   force_wandb_offline: false
   early_stop_on: val_loss
   early_stop_mode: min
-  experiment_name: mosei-rnn-m3-0.2
-  experiment_description: 'MOSEI RNN-baseline with M3'
+  experiment_name: Gaussian-Noise-Only-SSL-BT
+  experiment_description: 'First trial for MMBT'
 debug: false
+
+eval:
+  freeze_grads: true
+  
 # tune:
 #   num_trials: 100
 #   gpus_per_trial: 0.5
@@ -92,9 +97,9 @@ debug: false
 data:
   val_percent: 0.2
   test_percent: 0.2
-  batch_size: 32
-  batch_size_eval: 32
-  num_workers: 1
+  batch_size: 128
+  batch_size_eval: 128
+  num_workers: 4
   pin_memory: true
   drop_last: false
   shuffle_eval: true
