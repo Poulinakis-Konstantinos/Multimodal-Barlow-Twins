@@ -69,7 +69,7 @@ ssl_optimization:
 optimization:
   optimizer: Adam
   optim:
-    lr: 5e-3
+    lr: 5e-4
     weight_decay: 0.3
   lr_scheduler: true
   lr_schedule:
@@ -124,5 +124,8 @@ modalities:
 - text
 - audio
 - visual
+
+# utils
+run_name: h_size=60_lr=0.003_decay=0.3_sslDecay=0.3
 
 #config: configs/best.mosei.rnn.symattn.rnn.yml
