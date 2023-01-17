@@ -6,7 +6,7 @@ model:
   max_length: -1
   kernel_size: 33 # used for cnn residual trick
   batch_first: true
-  bidirectional: true
+  bidirectional: false
   packed_sequence: true
   merge_bi: "sum"
   rnn_type: "lstm"
@@ -16,7 +16,7 @@ model:
   num_layers: 1
   num_heads: 1
   dropout: 0.2
-  hidden_size: 50
+  hidden_size: 60
   multi_modal_drop: "mmdrop_hard" # other options are "dropout", "mmdrop_soft", "mmdrop_hard"
   mmdrop_before_fuse: false
   mmdrop_after_fuse: false
@@ -54,17 +54,31 @@ preprocessing:
   already_aligned: True
   align_features: False
 
+ssl_optimization:
+  optimizer: Adam
+  optim:
+    lr: 5e-3
+    weight_decay: 0.3
+  lr_scheduler: true
+  lr_schedule:
+    factor: 0.5
+    patience: 2
+    cooldown: 2
+    min_lr: 25e-6
 
-optimizer: Adam
-optim:
-  lr: 5e-4
-  weight_decay: 0
-lr_scheduler: true
-lr_schedule:
-  factor: 0.5
-  patience: 2
-  cooldown: 2
-  min_lr: 25e-6
+optimization:
+  optimizer: Adam
+  optim:
+    lr: 5e-3
+    weight_decay: 0.3
+  lr_scheduler: true
+  lr_schedule:
+    factor: 0.5
+    patience: 2
+    cooldown: 2
+    min_lr: 25e-6
+
+
 
 trainer:
   experiments_folder: eda
@@ -99,8 +113,8 @@ tune:
 data:
   val_percent: 0.2
   test_percent: 0.2
-  batch_size: 182
-  batch_size_eval: 182
+  batch_size: 200
+  batch_size_eval: 192
   num_workers: 4
   pin_memory: true
   drop_last: false
