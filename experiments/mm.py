@@ -119,6 +119,7 @@ if __name__ == "__main__":
         m3_augment=config.model.use_m3_augment,
         p_aug=config.model.p_augment,
     )
+
     # device = device("cuda" if cuda.is_available() else "cpu")
     # ssl_model= nn.DataParallel(ssl_model)
     # ssl_model.to(device)
@@ -149,6 +150,12 @@ if __name__ == "__main__":
     trainer = make_trainer(**config.trainer)
     watch_model(trainer, ssl_model)
     print('INIT DEVICE ', next(ssl_model.parameters()).device)
+    # log important params (common between ssl-supervised)
+    wandb.log({'batch_size':config.data.batch_size,
+               'num_layers':config.model.num_layers,
+               'hidden_size':config.model.hidden_size,
+               'bi_lstm': config.model.bidirectional,
+               'proj_size':list(config.barlow_twins.projector_size)[-1]})
     # Train model 
     trainer.fit(lm, datamodule=ldm)
 
@@ -191,13 +198,7 @@ if __name__ == "__main__":
         m3_augment=config.model.use_m3_augment,
         p_aug=config.model.p_augment,
     )
-    # log important params
-    wandb.log({'batch_size':config.data.batch_size,
-               'num_layers':config.model.num_layers,
-               'hidden_size':config.model.hidden_size,
-               'bi_lstm': config.model.bidirectional,
-               'proj_size':list(config.barlow_twins.projector_size)[-1]})
-               
+
     # Load best weights from self-supervised training into the new model
     ckpt_path = trainer.checkpoint_callback.best_model_path
     ckpt = load(ckpt_path, map_location="cpu")
