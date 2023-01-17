@@ -23,6 +23,8 @@ from slp.plbind.dm import PLDataModuleFromDatasets
 from slp.plbind.helpers import FromLogits
 from slp.plbind.module import RnnPLModule
 from slp.plbind.trainer import make_trainer, watch_model
+# import slp
+# print(slp.__file__)
 from slp.util.log import configure_logging
 from slp.util.system import is_file, safe_mkdirs
 from torch.optim import Adam
@@ -117,9 +119,9 @@ if __name__ == "__main__":
         m3_augment=config.model.use_m3_augment,
         p_aug=config.model.p_augment,
     )
-    device = device("cuda" if cuda.is_available() else "cpu")
-    ssl_model= nn.DataParallel(ssl_model)
-    ssl_model.to(device)
+    # device = device("cuda" if cuda.is_available() else "cpu")
+    # ssl_model= nn.DataParallel(ssl_model)
+    # ssl_model.to(device)
     # define optimizer and lr configs
     optimizer = Adam(
         [p for p in ssl_model.parameters() if p.requires_grad],
@@ -189,6 +191,13 @@ if __name__ == "__main__":
         m3_augment=config.model.use_m3_augment,
         p_aug=config.model.p_augment,
     )
+    # log important params
+    wandb.log({'batch_size':config.data.batch_size,
+               'num_layers':config.model.num_layers,
+               'hidden_size':config.model.hidden_size,
+               'bi_lstm': config.model.bidirectional,
+               'proj_size':list(config.barlow_twins.projector_size)[-1]})
+               
     # Load best weights from self-supervised training into the new model
     ckpt_path = trainer.checkpoint_callback.best_model_path
     ckpt = load(ckpt_path, map_location="cpu")
@@ -250,11 +259,21 @@ if __name__ == "__main__":
     # New trainer for the new fine tuned model
     trainer = make_trainer(**config.trainer)
     watch_model(trainer, model)
+        ################  Model  Zero-Shot Evaluation  ########################
+    results = test_mosei(lm_clf, ldm, trainer, modalities, load_best=False)
+    # Log results in wandb online platform
+    wandb.log({'zs_mae': results['mae'], 'zs_corr': results['corr'], 'zs_acc_7':results['acc_7'], 'zs_acc_5': results['acc_5'],
+               'zs_f1_pos':results['f1_pos'], 'zs_bin_acc_pos': results['bin_acc_pos'],
+               'zs_f1_neg': results['f1_neg'], 'zs_bin_acc_neg' : results['bin_acc_neg'],
+               'zs_f1':results['f1'], 'zs_bin_acc' : results['bin_acc']})
+    print(' Zero-Shot RESULTS: ')
+    print(results)
+    ## Now fine tune model
     print('MODEL PRED LM_CLF DEVICE FIT', next(lm_clf.model.parameters()).device)
     trainer.fit(lm_clf, datamodule=ldm)
 
 
-    ################  Model  Evaluation  ########################
+    ################  Fine Tuned Model  Evaluation ########################
     results = test_mosei(lm_clf, ldm, trainer, modalities, load_best=False)
     # Log results in wandb online platform
     wandb.log({'mae': results['mae'], 'corr': results['corr'], 'acc_7':results['acc_7'], 'acc_5': results['acc_5'],
