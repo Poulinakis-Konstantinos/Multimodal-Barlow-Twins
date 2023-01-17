@@ -350,6 +350,7 @@ def make_trainer(
     stochastic_weight_avg: bool = False,
     auto_scale_batch_size: bool = False,
     gpus: int = 0,
+    accelerator: str = 'dp',
     check_val_every_n_epoch: int = 1,
     gradient_clip_val: float = 0,
     precision: int = 32,
@@ -391,6 +392,7 @@ def make_trainer(
         auto_scale_batch_size (bool, optional): Find optimal batch size for the available resources when running
                 trainer.tune(). Defaults to False.
         gpus (int, optional): number of GPUs to use. Defaults to 0.
+        accelerator (str, optional): strategy to  use for Multi Gpu training.
         check_val_every_n_epoch (int, optional): Run validation every n epochs. Defaults to 1.
         gradient_clip_val (float, optional): Clip gradient norm value. Defaults to 0 (no clipping).
         precision (int, optional): Floating point precision. Defaults to 32.
@@ -508,6 +510,7 @@ def make_trainer(
     trainer = pl.Trainer(
         default_root_dir=logging_dir,
         gpus=gpus,
+        accelerator=accelerator,
         max_epochs=max_epochs,
         max_steps=max_steps,
         callbacks=callbacks,
