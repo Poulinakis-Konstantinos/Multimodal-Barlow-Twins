@@ -149,7 +149,7 @@ if __name__ == "__main__":
     # initialize trainer object based on config
     trainer = make_trainer(**config.trainer)
     watch_model(trainer, ssl_model)
-    wandb.run.name = 'test_run_name'
+    wandb.run.name = config.trainer.run_name
     print('INIT DEVICE ', next(ssl_model.parameters()).device)
     # log important params (common between ssl-supervised)
     wandb.log({'batch_size':config.data.batch_size,
