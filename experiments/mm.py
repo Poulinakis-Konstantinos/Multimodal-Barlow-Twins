@@ -127,12 +127,12 @@ if __name__ == "__main__":
     optimizer = Adam(
         [p for p in ssl_model.parameters() if p.requires_grad],
         lr=config.optim.lr,
-        weight_decay=config.optim.weight_decay,
+        weight_decay=config.ssl_optimization.optim.weight_decay,
     )
     lr_scheduler = None
-    if config.lr_schedule:
+    if config.ssl_optimization.lr_schedule:
         lr_scheduler = optim.lr_scheduler.ReduceLROnPlateau(
-            optimizer, **config.lr_schedule
+            optimizer, **config.ssl_optimization.lr_schedule
         )
     # Self-Supervised Criterion for Barlow Twins model
     criterion = Barlow_Twins_Loss(alpha=config.barlow_twins.alpha)  
@@ -149,13 +149,17 @@ if __name__ == "__main__":
     # initialize trainer object based on config
     trainer = make_trainer(**config.trainer)
     watch_model(trainer, ssl_model)
+    wandb.run.name = 'test_run_name'
     print('INIT DEVICE ', next(ssl_model.parameters()).device)
     # log important params (common between ssl-supervised)
     wandb.log({'batch_size':config.data.batch_size,
                'num_layers':config.model.num_layers,
                'hidden_size':config.model.hidden_size,
                'bi_lstm': config.model.bidirectional,
-               'proj_size':list(config.barlow_twins.projector_size)[-1]})
+               'proj_size':list(config.barlow_twins.projector_size)[-1],
+               'weight_decay_ssl':config.ssl_optimization.optim.weight_decay, # the only not shared
+               'dropout': config.dropout})
+
     # Train model 
     trainer.fit(lm, datamodule=ldm)
 
@@ -211,13 +215,13 @@ if __name__ == "__main__":
     # define a new optimizer and lr configs
     optimizer = Adam(
                     [p for p in model.parameters() if p.requires_grad],
-                    lr=config.optim.lr,
+                    lr=config.optimization.optim.lr,
                     #weight_decay=config.optim.weight_decay,
                     )
     lr_scheduler = None
-    if config.lr_schedule:
+    if config.optimization.lr_schedule:
         lr_scheduler = optim.lr_scheduler.ReduceLROnPlateau(
-            optimizer, **config.lr_schedule
+            optimizer, **config.optimization.lr_schedule
         )
     # Torch model to Pytorch Lighting module
     lm_clf = RnnPLModule(
@@ -266,16 +270,17 @@ if __name__ == "__main__":
     wandb.log({'zs_mae': results['mae'], 'zs_corr': results['corr'], 'zs_acc_7':results['acc_7'], 'zs_acc_5': results['acc_5'],
                'zs_f1_pos':results['f1_pos'], 'zs_bin_acc_pos': results['bin_acc_pos'],
                'zs_f1_neg': results['f1_neg'], 'zs_bin_acc_neg' : results['bin_acc_neg'],
-               'zs_f1':results['f1'], 'zs_bin_acc' : results['bin_acc']})
+               'zs_f1':results['f1'], 'zs_bin_acc' : results['bin_acc'], 'weight_decay':config.optimization.optim.weight_decay})
     print(' Zero-Shot RESULTS: ')
     print(results)
-    ## Now fine tune model
+
+
+    ##### Now fine tune model  #####
     print('MODEL PRED LM_CLF DEVICE FIT', next(lm_clf.model.parameters()).device)
     trainer.fit(lm_clf, datamodule=ldm)
 
-
     ################  Fine Tuned Model  Evaluation ########################
-    results = test_mosei(lm_clf, ldm, trainer, modalities, load_best=False)
+    results = test_mosei(lm_clf, ldm, trainer, modalities, load_best=True)
     # Log results in wandb online platform
     wandb.log({'mae': results['mae'], 'corr': results['corr'], 'acc_7':results['acc_7'], 'acc_5': results['acc_5'],
                'f1_pos':results['f1_pos'], 'bin_acc_pos': results['bin_acc_pos'],
