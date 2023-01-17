@@ -1,34 +1,28 @@
-model: 
+model:
+  feature_sizes:
+      audio: 74
+      visual: 35
+      text: 300
   max_length: -1
-  kernel_size: 33
+  kernel_size: 33 # used for cnn residual trick
+  batch_first: true
+  bidirectional: true
+  packed_sequence: true
+  merge_bi: "sum"
+  rnn_type: "lstm"
+  attention: true
   nystrom: false
   num_landmarks: 32
   num_layers: 1
   num_heads: 1
   dropout: 0.2
-  hidden_size: 100
-  inner_size: 200
-  prenorm: false
-  scalenorm: false
-  mmdrop_after_fuse: false
-  p_drop_modalities:
-  - 0.33
-  - 0.33
-  - 0.33
-  feature_sizes:
-    audio: 74
-    visual: 35
-    text: 300
-  batch_first: true
-  bidirectional: false
-  packed_sequence: true
-  merge_bi: sum
-  rnn_type: lstm
-  attention: False
-  multi_modal_drop: mmdrop_hard
+  hidden_size: 50
+  multi_modal_drop: "mmdrop_hard" # other options are "dropout", "mmdrop_soft", "mmdrop_hard"
   mmdrop_before_fuse: false
-  p_mmdrop: 0.20
-  use_m3_masking: False
+  mmdrop_after_fuse: false
+  p_mmdrop: 0.25
+  p_drop_modalities: [0.6, 0.2, 0.2]
+  use_m3_masking: false
   use_m3_sequential: false
 
 transformations:
@@ -36,73 +30,77 @@ transformations:
   - 0.
   - 0.
   gauss_noise_p: 
-  - 0.5
+  - 0.9
   - 0.2
   gauss_noise_mean:
   - 0.0
   - 0.0
   gauss_noise_std:
   - 0.1
-  - 0.2
+  - 0.1
 
 barlow_twins:
   alpha: 0.005
   projector_size: 
-  - 1200  
-  - 1200 
-  - 1200 
+  - 1000  
+  - 1000 
+  - 1000 
 
 preprocessing:
-  pad_front: true
-  pad_back: false
-  remove_pauses: true
   max_length: -1
-  already_aligned: true
-  align_features: false
+  pad_front: True
+  pad_back: False
+  remove_pauses: True
+  already_aligned: True
+  align_features: False
 
 
 optimizer: Adam
 optim:
-  lr: 0.0005
+  lr: 5e-4
   weight_decay: 0
-lr_scheduler: false
+lr_scheduler: true
 lr_schedule:
   factor: 0.5
   patience: 2
   cooldown: 2
-  min_lr: 2.5e-05
+  min_lr: 25e-6
 
 trainer:
   experiments_folder: eda
   save_top_k: 1
-  patience: 10
+  patience: 5
   tags:
   - mosei
   - rnn-baseline
   stochastic_weight_avg: false
   gpus: 1
+  accelerator: 'dp'
   check_val_every_n_epoch: 1
   gradient_clip_val: 0
   max_epochs: 100
   force_wandb_offline: false
   early_stop_on: val_loss
   early_stop_mode: min
-  experiment_name: Gaussian-Noise-Only-SSL-BT
+  experiment_name: Gauss_Noise-and-Fine_tuning
   experiment_description: 'First trial for MMBT'
 debug: false
-evaluating:
+
+  
+tune:
   freeze_grads: true
-# tune:
-#   num_trials: 100
-#   gpus_per_trial: 0.5
-#   cpus_per_trial: 1
-#   metric: validation_loss
+  # num_trials: 100
+  # gpus_per_trial: 0.5
+  # cpus_per_trial: 1
+  # metric: validation_loss
   # mode: min
+
+
 data:
   val_percent: 0.2
   test_percent: 0.2
-  batch_size: 128
-  batch_size_eval: 128
+  batch_size: 182
+  batch_size_eval: 182
   num_workers: 4
   pin_memory: true
   drop_last: false
