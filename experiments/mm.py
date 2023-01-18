@@ -36,7 +36,7 @@ if __name__ == "__main__":
     parser = get_mosei_parser()
     parser = make_cli_parser(parser, PLDataModuleFromDatasets)
 
-    config = parse_config(parser, '/home/poulinakis/Multimodal-Barlow-Twins/configs/my-config.yml')#parser.parse_args().config)
+    config = parse_config(parser, parser.parse_args().config)
 
     # if config.trainer.experiment_name != "Multimodal_Barlow_Twins":
     #     config.trainer.experiment_name = "Multimodal_Barlow_Twins"
@@ -158,6 +158,7 @@ if __name__ == "__main__":
                'bi_lstm': config.model.bidirectional,
                'proj_size':list(config.barlow_twins.projector_size)[-1],
                'weight_decay_ssl':config.ssl_optimization.optim.weight_decay, # the only not shared
+               'lr_ssl':config.ssl_optimization.optim.lr, # the only not shared
                'dropout': config.dropout})
 
     # Train model 
@@ -270,7 +271,8 @@ if __name__ == "__main__":
     wandb.log({'zs_mae': results['mae'], 'zs_corr': results['corr'], 'zs_acc_7':results['acc_7'], 'zs_acc_5': results['acc_5'],
                'zs_f1_pos':results['f1_pos'], 'zs_bin_acc_pos': results['bin_acc_pos'],
                'zs_f1_neg': results['f1_neg'], 'zs_bin_acc_neg' : results['bin_acc_neg'],
-               'zs_f1':results['f1'], 'zs_bin_acc' : results['bin_acc'], 'weight_decay':config.optimization.optim.weight_decay})
+               'zs_f1':results['f1'], 'zs_bin_acc' : results['bin_acc'],
+               'weight_decay':config.optimization.optim.weight_decay, 'lr':config.optimization.optim.lr})
     print(' Zero-Shot RESULTS: ')
     print(results)
 
