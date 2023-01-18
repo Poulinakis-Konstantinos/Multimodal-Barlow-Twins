@@ -159,7 +159,8 @@ if __name__ == "__main__":
                'proj_size':list(config.barlow_twins.projector_size)[-1],
                'weight_decay_ssl':config.ssl_optimization.optim.weight_decay, # the only not shared
                'lr_ssl':config.ssl_optimization.optim.lr, # the only not shared
-               'dropout': config.dropout})
+               'dropout': config.dropout,
+               'p_noise': list(config.transformations.gauss_noise_p)})
 
     # Train model 
     trainer.fit(lm, datamodule=ldm)
@@ -255,7 +256,7 @@ if __name__ == "__main__":
         train,
         val=dev,
         test=test,  # test set remains the same 
-        batch_size=config.data.batch_size,
+        batch_size= int(config.data.batch_size)*2,
         batch_size_eval=config.data.batch_size_eval,
         collate_fn=collate_fn,
         pin_memory=config.data.pin_memory,
