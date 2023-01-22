@@ -80,11 +80,11 @@ if __name__ == "__main__":
         train,
         val=dev,
         test=test,
-        batch_size=config.data.batch_size,
-        batch_size_eval=config.data.batch_size_eval,
+        batch_size=config.data_ssl.batch_size,
+        batch_size_eval=config.data_ssl.batch_size_eval,
         collate_fn=collate_fn,
-        pin_memory=config.data.pin_memory,
-        num_workers=config.data.num_workers,
+        pin_memory=config.data_ssl.pin_memory,
+        num_workers=config.data_ssl.num_workers,
     )
     ldm.setup()
     feature_sizes = config.model.feature_sizes
@@ -142,17 +142,17 @@ if __name__ == "__main__":
         optimizer,
         criterion,
         lr_scheduler=lr_scheduler,
-        metrics={
-            "BT_loss" : BT_Loss_metric(alpha=config.barlow_twins.alpha)
-        },
+        # metrics={
+        #     "BT_loss" : BT_Loss_metric(alpha=config.barlow_twins.alpha)
+        # },
     )
     # initialize trainer object based on config
-    trainer = make_trainer(**config.trainer)
+    trainer = make_trainer(**config.trainer_ssl)
     watch_model(trainer, ssl_model)
     wandb.run.name = config.run_name
     print('INIT DEVICE ', next(ssl_model.parameters()).device)
     # log important params (common between ssl-supervised)
-    wandb.log({'batch_size':config.data.batch_size,
+    wandb.log({'batch_size_ssl':config.data_ssl.batch_size,
                'num_layers':config.model.num_layers,
                'hidden_size':config.model.hidden_size,
                'bi_lstm': config.model.bidirectional,
@@ -255,9 +255,9 @@ if __name__ == "__main__":
     # Convert dataset to Pytorch Lightning module
     ldm = PLDataModuleFromDatasets(
         train,
-        val=dev,``
+        val=dev,
         test=test,  # test set remains the same 
-        batch_size= round(int(config.data.batch_size)*1.5),
+        batch_size= config.data.batch_size,
         batch_size_eval=config.data.batch_size_eval,
         collate_fn=collate_fn,
         pin_memory=config.data.pin_memory,
@@ -270,7 +270,8 @@ if __name__ == "__main__":
         ################  Model  Zero-Shot Evaluation  ########################
     results = test_mosei(lm_clf, ldm, trainer, modalities, load_best=False)
     # Log results in wandb online platform
-    wandb.log({'zs_mae': results['mae'], 'zs_corr': results['corr'], 'zs_acc_7':results['acc_7'], 'zs_acc_5': results['acc_5'],
+    wandb.log({'batch_size':config.data.batch_size,
+               'zs_mae': results['mae'], 'zs_corr': results['corr'], 'zs_acc_7':results['acc_7'], 'zs_acc_5': results['acc_5'],
                'zs_f1_pos':results['f1_pos'], 'zs_bin_acc_pos': results['bin_acc_pos'],
                'zs_f1_neg': results['f1_neg'], 'zs_bin_acc_neg' : results['bin_acc_neg'],
                'zs_f1':results['f1'], 'zs_bin_acc' : results['bin_acc'],

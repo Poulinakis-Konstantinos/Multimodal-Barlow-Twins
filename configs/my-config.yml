@@ -1,23 +1,23 @@
 model:
   feature_sizes:
-      audio: 74
-      visual: 35
-      text: 300
+    audio: 74
+    visual: 35
+    text: 300
   max_length: -1
   kernel_size: 33 # used for cnn residual trick
   batch_first: true
   bidirectional: false
   packed_sequence: true
-  merge_bi: "sum"
-  rnn_type: "lstm"
+  merge_bi: sum
+  rnn_type: lstm
   attention: true
   nystrom: false
   num_landmarks: 32
   num_layers: 1
   num_heads: 1
   dropout: 0.2
-  hidden_size: 60
-  multi_modal_drop: "mmdrop_hard" # other options are "dropout", "mmdrop_soft", "mmdrop_hard"
+  hidden_size: 100
+  multi_modal_drop: mmdrop_hard   # other options are "dropout", "mmdrop_soft", "mmdrop_hard"
   mmdrop_before_fuse: false
   mmdrop_after_fuse: false
   p_mmdrop: 0.25
@@ -26,12 +26,12 @@ model:
   use_m3_sequential: false
 
 transformations:
-  mm_aug_p: 
+  mm_aug_p:
   - 0.
   - 0.
-  gauss_noise_p: 
-  - 0.9
-  - 0.2
+  gauss_noise_p:
+  - 0.5
+  - 0.5
   gauss_noise_mean:
   - 0.0
   - 0.0
@@ -41,24 +41,24 @@ transformations:
 
 barlow_twins:
   alpha: 0.005
-  projector_size: 
-  - 1000  
-  - 1000 
-  - 1000 
+  projector_size:
+  - 1000
+  - 1000
+  - 1000
 
 preprocessing:
   max_length: -1
-  pad_front: True
-  pad_back: False
-  remove_pauses: True
-  already_aligned: True
-  align_features: False
+  pad_front: true
+  pad_back: false
+  remove_pauses: true
+  already_aligned: true
+  align_features: false
 
 ssl_optimization:
   optimizer: Adam
   optim:
-    lr: 5e-3
-    weight_decay: 0.3
+    lr: 0.0005
+    weight_decay: 0.0
   lr_scheduler: true
   lr_schedule:
     factor: 0.5
@@ -69,8 +69,8 @@ ssl_optimization:
 optimization:
   optimizer: Adam
   optim:
-    lr: 5e-4
-    weight_decay: 0.3
+    lr: 0.005
+    weight_decay: 0.0
   lr_scheduler: true
   lr_schedule:
     factor: 0.5
@@ -89,43 +89,70 @@ trainer:
   - rnn-baseline
   stochastic_weight_avg: false
   gpus: 1
-  accelerator: 'dp'
+  accelerator: dp
   check_val_every_n_epoch: 1
   gradient_clip_val: 0
-  max_epochs: 100
+  max_epochs: 1
   force_wandb_offline: false
   early_stop_on: val_loss
   early_stop_mode: min
-  experiment_name: Gauss_Noise-and-Fine_tuning
-  experiment_description: 'First trial for MMBT'
+  experiment_name: Tests
+  experiment_description: First trial for MMBT
+
+trainer_ssl:
+  experiments_folder: eda
+  save_top_k: 1
+  patience: 100
+  tags:
+  - mosei
+  - rnn-baseline
+  stochastic_weight_avg: false
+  gpus: 1
+  accelerator: dp
+  check_val_every_n_epoch: 1
+  gradient_clip_val: 0
+  max_epochs: 1
+  force_wandb_offline: false
+  experiment_name: Tests
+  experiment_description: First trial for MMBT
+
 debug: false
 
-  
+
 tune:
-  freeze_grads: true
+  freeze_grads: false
   # num_trials: 100
   # gpus_per_trial: 0.5
   # cpus_per_trial: 1
   # metric: validation_loss
   # mode: min
 
-
 data:
   val_percent: 0.2
   test_percent: 0.2
-  batch_size: 200
-  batch_size_eval: 192
+  batch_size: 256
+  batch_size_eval: 256
   num_workers: 4
   pin_memory: true
   drop_last: false
   shuffle_eval: true
-seed: null
+data_ssl:
+  val_percent: 0.0
+  test_percent: 0.0
+  batch_size: 182
+  batch_size_eval: 182
+  num_workers: 4
+  pin_memory: true
+  drop_last: false
+  shuffle_eval: true
+
+seed:
 modalities:
 - text
 - audio
 - visual
 
 # utils
-run_name: h_size=60_lr=0.003_decay=0.3_sslDecay=0.3
+run_name: freeze_grads=False_2023-01-22 20:45:14.807070
 
 #config: configs/best.mosei.rnn.symattn.rnn.yml

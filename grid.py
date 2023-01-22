@@ -9,7 +9,7 @@ from datetime import datetime
 
 
 if __name__=='__main__':
-    config_path = '/home/poulinakis/Multimodal-Barlow-Twins/configs/my-config_3.yml'
+    config_path = '/home/poulinakis/Multimodal-Barlow-Twins/configs/my-config.yml'
     # load the config
     yaml = ruamel.yaml.YAML()
     # yaml.preserve_quotes = True
@@ -25,15 +25,25 @@ if __name__=='__main__':
               'weight_decay': [0.0],
               'lr_ssl': [5e-4],
               'lr': [5e-3],
-              'batch_size': [16, 32, 64] , #[128, 156, 182],
               'freeze_grads': [False],
-              'gauss_noise_p': [[0.7, 0.2], [0.9, 0.1]] #,[[0.0, 0.0], [0.5, 0.5]] #,  
+              'gauss_noise_p': [[0.5, 0.5]], #[[0.0, 0.0], [0.5, 0.5], [0.7, 0.2], [0.9, 0.1]],
+              
+              'batch_size': [256],
+              'batch_size_ssl': [182],
+
+              'max_epochs': [1],
+              'max_epochs_ssl': [1] #[2, 5, 10, 20, 30, 50, 100]
             }
 
-    data['trainer']['experiment_name'] = 'Test=batch_Pnoise'
+    experiment_name = 'Tests'
+    data['trainer']['experiment_name'] = experiment_name
+    data['trainer_ssl']['experiment_name'] = experiment_name
+
     for i, parameters in enumerate(list(ParameterGrid(params))):
         fr = parameters['freeze_grads']
         data['run_name'] = f'freeze_grads={fr}_{str(datetime.now())}'
+        data['trainer']['max_epochs'] = parameters['max_epochs']
+        data['trainer_ssl']['max_epochs'] = parameters['max_epochs_ssl']
 
         # change the configuration file's values
         data['model']['hidden_size'] = parameters['hidden_size']
@@ -51,6 +61,8 @@ if __name__=='__main__':
         # batch size
         data['data']['batch_size'] = parameters['batch_size']
         data['data']['batch_size_eval'] = parameters['batch_size']
+        data['data_ssl']['batch_size'] = parameters['batch_size_ssl']
+        data['data_ssl']['batch_size_eval'] = parameters['batch_size_ssl']
 
         # SSL transformations
         data['transformations']['gauss_noise_p'] = parameters['gauss_noise_p']
