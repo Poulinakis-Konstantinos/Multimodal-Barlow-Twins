@@ -160,7 +160,8 @@ if __name__ == "__main__":
                'weight_decay_ssl':config.ssl_optimization.optim.weight_decay, # the only not shared
                'lr_ssl':config.ssl_optimization.optim.lr, # the only not shared
                'dropout': config.dropout,
-               'p_noise': list(config.transformations.gauss_noise_p)})
+               'p_noise1': list(config.transformations.gauss_noise_p)[0],
+               'p_noise2': list(config.transformations.gauss_noise_p)[1]})
 
     # Train model 
     trainer.fit(lm, datamodule=ldm)
@@ -254,9 +255,9 @@ if __name__ == "__main__":
     # Convert dataset to Pytorch Lightning module
     ldm = PLDataModuleFromDatasets(
         train,
-        val=dev,
+        val=dev,``
         test=test,  # test set remains the same 
-        batch_size= int(config.data.batch_size)*2,
+        batch_size= round(int(config.data.batch_size)*1.5),
         batch_size_eval=config.data.batch_size_eval,
         collate_fn=collate_fn,
         pin_memory=config.data.pin_memory,
