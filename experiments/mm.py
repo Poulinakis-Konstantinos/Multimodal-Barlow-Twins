@@ -152,7 +152,8 @@ if __name__ == "__main__":
     wandb.run.name = config.run_name
     print('INIT DEVICE ', next(ssl_model.parameters()).device)
     # log important params (common between ssl-supervised)
-    wandb.log({'batch_size_ssl':config.data_ssl.batch_size,
+    wandb.log({'epochs_ssl': config.trainer_ssl.max_epochs,
+               'batch_size_ssl':config.data_ssl.batch_size,
                'num_layers':config.model.num_layers,
                'hidden_size':config.model.hidden_size,
                'bi_lstm': config.model.bidirectional,
