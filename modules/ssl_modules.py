@@ -68,14 +68,14 @@ class BT_Loss_metric(Metric):
         target = preds
         #print('Preds ', target.size(), target)
 
-        self.correct += self.Bt(preds)
+        self.correct = self.Bt(preds)
        # print('Self.correct shape :', self.correct.size(), self.correct)
 
     def compute(self):
        # print('Self.total ', self.total)
        # print(self.correct / self.total)
-        return self.correct / self.total
-
+        return self.correct    
+        
 
 class MM_Aug(object):
     def __init__(

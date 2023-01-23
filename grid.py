@@ -29,13 +29,13 @@ if __name__=='__main__':
               'gauss_noise_p': [[0.5, 0.5]], #[[0.0, 0.0], [0.5, 0.5], [0.7, 0.2], [0.9, 0.1]],
               
               'batch_size': [256],
-              'batch_size_ssl': [182],
+              'batch_size_ssl': [178],
 
-              'max_epochs': [1],
-              'max_epochs_ssl': [1] #[2, 5, 10, 20, 30, 50, 100]
+              'max_epochs': [10],    # epochs for fine tuning
+              'max_epochs_ssl': [2, 5, 10, 30, 40 ,50]   # patience is set at 100 so all epochs are executed.
             }
 
-    experiment_name = 'Tests'
+    experiment_name = 'Best_epochs Testing'
     data['trainer']['experiment_name'] = experiment_name
     data['trainer_ssl']['experiment_name'] = experiment_name
 

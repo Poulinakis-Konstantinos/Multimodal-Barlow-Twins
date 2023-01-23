@@ -92,11 +92,11 @@ trainer:
   accelerator: dp
   check_val_every_n_epoch: 1
   gradient_clip_val: 0
-  max_epochs: 1
+  max_epochs: 10
   force_wandb_offline: false
   early_stop_on: val_loss
   early_stop_mode: min
-  experiment_name: Tests
+  experiment_name: Best_epochs Testing
   experiment_description: First trial for MMBT
 
 trainer_ssl:
@@ -111,9 +111,9 @@ trainer_ssl:
   accelerator: dp
   check_val_every_n_epoch: 1
   gradient_clip_val: 0
-  max_epochs: 1
+  max_epochs: 5
   force_wandb_offline: false
-  experiment_name: Tests
+  experiment_name: Best_epochs Testing
   experiment_description: First trial for MMBT
 
 debug: false
@@ -139,8 +139,8 @@ data:
 data_ssl:
   val_percent: 0.0
   test_percent: 0.0
-  batch_size: 182
-  batch_size_eval: 182
+  batch_size: 178
+  batch_size_eval: 178
   num_workers: 4
   pin_memory: true
   drop_last: false
@@ -153,6 +153,6 @@ modalities:
 - visual
 
 # utils
-run_name: freeze_grads=False_2023-01-22 20:45:14.807070
+run_name: freeze_grads=False_2023-01-23 12:35:20.826971
 
 #config: configs/best.mosei.rnn.symattn.rnn.yml
