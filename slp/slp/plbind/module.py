@@ -163,6 +163,8 @@ class _RnnClassification(_Predictor):
             Tuple[torch.Tensor, torch.Tensor]: (logits, inputs)
         """
         inputs, targets, lengths = self.parse_batch(batch)
+        #print("======"*10)
+        #print(type(model))
         y_pred = model(inputs, lengths)
 
         return y_pred.squeeze(), targets.squeeze()
@@ -500,9 +502,9 @@ class SimplePLModule(pl.LightningModule):
 
         keys = list(outputs[0].keys())
         aggregated = {fmt(k): torch.stack([x[k] for x in outputs]).mean() for k in keys}
+        self.log_to_console(aggregated, mode=mode)
         aggregated["epoch"] = self.current_epoch + 1
-
-        self.log_dict(aggregated, logger=True, prog_bar=False, on_epoch=True)
+        self.log_dict(aggregated, logger=True, prog_bar=True, on_epoch=True)
 
         return aggregated
 
@@ -541,7 +543,6 @@ class SimplePLModule(pl.LightningModule):
             outputs (List[Dict[str, torch.Tensor]]): Aggregated outputs from train_step
         """
         outputs = self.aggregate_epoch_metrics(outputs, mode="Training")
-        self.log_to_console(outputs, mode="Training")
 
     def validation_step(self, batch, batch_idx):
         """Compute loss for a single validation step and log metrics to loggers
@@ -559,9 +560,10 @@ class SimplePLModule(pl.LightningModule):
             self.val_metrics, loss, y_hat, targets, mode="val"
         )
 
-        metrics[
-            "best_score"
-        ] = self.trainer.early_stopping_callback.best_score.detach().cpu()
+        if self.trainer.early_stopping_callback != None :
+            metrics[
+                "best_score"
+            ] = self.trainer.early_stopping_callback.best_score.detach().cpu()
 
         return metrics
 
@@ -576,11 +578,12 @@ class SimplePLModule(pl.LightningModule):
         if torch.isnan(outputs["val_loss"]) or torch.isinf(outputs["val_loss"]):
             outputs["val_loss"] = 1000000
 
-        outputs["best_score"] = min(
-            outputs[self.trainer.early_stopping_callback.monitor].detach().cpu(),
-            self.trainer.early_stopping_callback.best_score.detach().cpu(),
-        )
-        self.log_to_console(outputs, mode="Validation")
+        if self.trainer.early_stopping_callback != None :
+            logger.debug(f'EARLY STOP MONITOR VALUE = { self.trainer.early_stopping_callback.monitor} ')
+            outputs["best_score"] = min(
+                outputs[self.trainer.early_stopping_callback.monitor].detach().cpu(),
+                self.trainer.early_stopping_callback.best_score.detach().cpu(),
+            )
 
     def test_step(self, batch, batch_idx):
         """Compute loss for a single test step and log metrics to loggers
@@ -607,7 +610,6 @@ class SimplePLModule(pl.LightningModule):
             outputs (List[Dict[str, torch.Tensor]]): Aggregated outputs from test_step
         """
         outputs = self.aggregate_epoch_metrics(outputs, mode="Test")
-        self.log_to_console(outputs, mode="Test")
 
 
 class PLModule(SimplePLModule):

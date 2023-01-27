@@ -489,21 +489,28 @@ def make_trainer(
         )
 
     callbacks = [
-        EarlyStoppingWithLogs(
+        pl.callbacks.ModelCheckpoint( 
+            dirpath=checkpoint_dir,
+            filename="{epoch}-{val_loss:.2f}",
+            monitor=None,               #checkpoint only last epoch
+        ),
+        pl.callbacks.LearningRateMonitor(logging_interval="step"),
+    ]
+    if early_stop_on != 'None' :
+        callbacks.append(EarlyStoppingWithLogs(
             monitor=early_stop_on,
             mode=early_stop_mode,
             patience=patience,
             verbose=True,
-        ),
+        ))
+        callbacks.append(
         pl.callbacks.ModelCheckpoint(
             dirpath=checkpoint_dir,
             filename="{epoch}-{val_loss:.2f}",
             monitor=early_stop_on,
             save_top_k=save_top_k,
             mode=early_stop_mode,
-        ),
-        pl.callbacks.LearningRateMonitor(logging_interval="step"),
-    ]
+        ))
 
     logger.info("Configured Early stopping and Model checkpointing to track val_loss")
 
@@ -528,7 +535,8 @@ def make_trainer(
         profiler=profiler,
         num_nodes=num_nodes,
     )
-
+    if early_stop_on != 'None' :
+        trainer.early_stopping_callback = None
     return trainer
 
 
