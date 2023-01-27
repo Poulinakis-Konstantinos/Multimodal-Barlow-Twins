@@ -30,8 +30,8 @@ transformations:
   - 0.
   - 0.
   gauss_noise_p:
-  - 0.5
-  - 0.5
+  - 0.7
+  - 0.2
   gauss_noise_mean:
   - 0.0
   - 0.0
@@ -92,16 +92,16 @@ trainer:
   accelerator: dp
   check_val_every_n_epoch: 1
   gradient_clip_val: 0
-  max_epochs: 10
+  max_epochs: 1
   force_wandb_offline: false
   early_stop_on: val_loss
   early_stop_mode: min
-  experiment_name: Best_epochs Testing
+  experiment_name: Testing checkpoints
   experiment_description: First trial for MMBT
 
 trainer_ssl:
   experiments_folder: eda
-  save_top_k: 1
+  save_top_k: 5
   patience: 100
   tags:
   - mosei
@@ -111,9 +111,11 @@ trainer_ssl:
   accelerator: dp
   check_val_every_n_epoch: 1
   gradient_clip_val: 0
-  max_epochs: 5
+  max_epochs: 2
+  early_stop_on: None
+  early_stop_mode: min
   force_wandb_offline: false
-  experiment_name: Best_epochs Testing
+  experiment_name: Testing checkpoints
   experiment_description: First trial for MMBT
 
 debug: false
@@ -136,6 +138,8 @@ data:
   pin_memory: true
   drop_last: false
   shuffle_eval: true
+  data_percentage: 10
+
 data_ssl:
   val_percent: 0.0
   test_percent: 0.0
@@ -153,6 +157,6 @@ modalities:
 - visual
 
 # utils
-run_name: freeze_grads=False_2023-01-23 12:35:20.826971
+run_name: freeze_grads=False_2023-01-27 21:03:14.234023
 
 #config: configs/best.mosei.rnn.symattn.rnn.yml

@@ -148,6 +148,8 @@ if __name__ == "__main__":
     )
     # initialize trainer object based on config
     trainer = make_trainer(**config.trainer_ssl)
+    logger.debug(f'Trainer callbacks {trainer.callbacks}')
+    logger.debug('Trainer callbacks metrics {trainer.callback_metrics}')
     watch_model(trainer, ssl_model)
     wandb.run.name = config.run_name
     print('INIT DEVICE ', next(ssl_model.parameters()).device)
@@ -248,7 +250,9 @@ if __name__ == "__main__":
 
     # Use a subset of the training data for fine tuning 
     print("Initiating Supervised fine-tuning ...")
-    train = MOSEI(train_data, modalities=modalities, text_is_tokens=False)
+    percent = config.data.data_percentage # e.g. 0.1
+   # data_percentage = round(train_data[0]*percent) # sample of dataset to use during supervised fine tuning
+    train = MOSEI(train_data[0: percent], modalities=modalities, text_is_tokens=False)
     dev = MOSEI(train_data, modalities=modalities, text_is_tokens=False)
     # collate_fn = MultimodalSequenceClassificationCollator(
     #     device="cuda", modalities=modalities
@@ -272,6 +276,7 @@ if __name__ == "__main__":
     results = test_mosei(lm_clf, ldm, trainer, modalities, load_best=False)
     # Log results in wandb online platform
     wandb.log({'batch_size':config.data.batch_size,
+                'data_percent': config.data.data_percentage,
                'zs_mae': results['mae'], 'zs_corr': results['corr'], 'zs_acc_7':results['acc_7'], 'zs_acc_5': results['acc_5'],
                'zs_f1_pos':results['f1_pos'], 'zs_bin_acc_pos': results['bin_acc_pos'],
                'zs_f1_neg': results['f1_neg'], 'zs_bin_acc_neg' : results['bin_acc_neg'],

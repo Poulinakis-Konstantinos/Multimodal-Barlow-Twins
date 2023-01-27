@@ -16,6 +16,8 @@ if __name__=='__main__':
     with open(config_path) as fp:
         data = yaml.load(fp)
 
+    experiment_name = 'Testing checkpoints'
+
     # Define a search space for the parameters
     params = {'hidden_size': [100], # model
               'num_layers': [1],
@@ -26,16 +28,18 @@ if __name__=='__main__':
               'lr_ssl': [5e-4],
               'lr': [5e-3],
               'freeze_grads': [False],
-              'gauss_noise_p': [[0.5, 0.5]], #[[0.0, 0.0], [0.5, 0.5], [0.7, 0.2], [0.9, 0.1]],
+              'gauss_noise_p': [[0.5, 0.5], [0.7, 0.2]], #[[0.0, 0.0], [0.5, 0.5], , [0.9, 0.1]],
               
               'batch_size': [256],
               'batch_size_ssl': [178],
 
-              'max_epochs': [10],    # epochs for fine tuning
-              'max_epochs_ssl': [2, 5, 10, 30, 40 ,50]   # patience is set at 100 so all epochs are executed.
-            }
+              'max_epochs': [1],    # epochs for fine tuning
+              'max_epochs_ssl': [2], #[2, 5, 10, 30, 40 ,50, 60 , 100],   # patience is set at 100 so all epochs are executed.
+           
+              'data_percentage': [10] # provide absolute value of samples (for now)
+           }
 
-    experiment_name = 'Best_epochs Testing'
+    
     data['trainer']['experiment_name'] = experiment_name
     data['trainer_ssl']['experiment_name'] = experiment_name
 
@@ -61,6 +65,7 @@ if __name__=='__main__':
         # batch size
         data['data']['batch_size'] = parameters['batch_size']
         data['data']['batch_size_eval'] = parameters['batch_size']
+        data['data']['data_percentage'] = parameters['data_percentage']
         data['data_ssl']['batch_size'] = parameters['batch_size_ssl']
         data['data_ssl']['batch_size_eval'] = parameters['batch_size_ssl']
 
@@ -77,6 +82,6 @@ if __name__=='__main__':
         config = parse_config(parser, config_path)
 
         # Call training script
-        command = f'python3 experiments/mm.py --config {config_path} --gpus 1 '
+        command = f'python3 experiments/mm.py --config {config_path} --gpus 1 --offline'
         os.system(command)
     #subprocess.call(["python", "experiments/mm.py", "--config configs/my-config.yml", "--offline"])
