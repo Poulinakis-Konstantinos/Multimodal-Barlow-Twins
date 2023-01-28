@@ -24,7 +24,7 @@ from slp.plbind.helpers import FromLogits
 from slp.plbind.module import RnnPLModule
 from slp.plbind.trainer import make_trainer, watch_model
 # import slp
-# print(slp.__file__)
+# logger.debug(f'{slp.__file__}')
 from slp.util.log import configure_logging
 from slp.util.system import is_file, safe_mkdirs
 from torch.optim import Adam
@@ -152,7 +152,7 @@ if __name__ == "__main__":
     logger.debug('Trainer callbacks metrics {trainer.callback_metrics}')
     watch_model(trainer, ssl_model)
     wandb.run.name = config.run_name
-    print('INIT DEVICE ', next(ssl_model.parameters()).device)
+    logger.debug(f'INIT DEVICE {next(ssl_model.parameters()).device}')
     # log important params (common between ssl-supervised)
     wandb.log({'epochs_ssl': config.trainer_ssl.max_epochs,
                'batch_size_ssl':config.data_ssl.batch_size,
@@ -169,15 +169,7 @@ if __name__ == "__main__":
     # Train model 
     trainer.fit(lm, datamodule=ldm)
 
-    # # cut projector head and add clf on top
-    # model.projector, model.bn = nn.Identity(), nn.Identity()
-    #num_classes = 1
-    #clf = nn.Linear(model.encoder.out_size, num_classes)
-    # model = nn.Sequential(model, clf)
-    # print(model)
-
     ################   Supervised Fine-Tuning of self-supervised model   ##########################
-
     # Define an identical model with self-supervision mode off
     model = Multimodal_Barlow_Twins(
         feature_sizes,
@@ -213,7 +205,7 @@ if __name__ == "__main__":
     ckpt_path = trainer.checkpoint_callback.best_model_path
     ckpt = load(ckpt_path, map_location="cpu")
     model.load_state_dict(ckpt["state_dict"], strict=False)
-    print('MODEL PRED DEVICE ', next(model.parameters()).device)
+    logger.debug(f'MODEL PRED DEVICE {next(model.parameters()).device}')
     # If defined in config freeze ssl network weights and only fine tune the linear layer.
     if config.tune.freeze_grads:
         model.requires_grad_(False)
@@ -245,18 +237,15 @@ if __name__ == "__main__":
              "mae": torchmetrics.MeanAbsoluteError(),
         },
     )
-    print('MODEL PRED LM_CLF DEVICE ', next(lm_clf.model.parameters()).device)
-    #lm_clf = lm_clf.cuda()
+    logger.debug(f'MODEL PRED LM_CLF DEVICE {next(lm_clf.model.parameters()).device}')
 
     # Use a subset of the training data for fine tuning 
-    print("Initiating Supervised fine-tuning ...")
+    logger.info(f'Initiating Supervised fine-tuning ...')
     percent = config.data.data_percentage # e.g. 0.1
    # data_percentage = round(train_data[0]*percent) # sample of dataset to use during supervised fine tuning
     train = MOSEI(train_data[0: percent], modalities=modalities, text_is_tokens=False)
     dev = MOSEI(train_data, modalities=modalities, text_is_tokens=False)
-    # collate_fn = MultimodalSequenceClassificationCollator(
-    #     device="cuda", modalities=modalities
-    # )
+
     # Convert dataset to Pytorch Lightning module
     ldm = PLDataModuleFromDatasets(
         train,
@@ -269,6 +258,7 @@ if __name__ == "__main__":
         num_workers=config.data.num_workers,
     )
     ldm.setup()
+
     # New trainer for the new fine tuned model
     trainer = make_trainer(**config.trainer)
     watch_model(trainer, model)
@@ -281,13 +271,15 @@ if __name__ == "__main__":
                'zs_f1_pos':results['f1_pos'], 'zs_bin_acc_pos': results['bin_acc_pos'],
                'zs_f1_neg': results['f1_neg'], 'zs_bin_acc_neg' : results['bin_acc_neg'],
                'zs_f1':results['f1'], 'zs_bin_acc' : results['bin_acc'],
-               'weight_decay':config.optimization.optim.weight_decay, 'lr':config.optimization.optim.lr})
-    print(' Zero-Shot RESULTS: ')
-    print(results)
+               'weight_decay':config.optimization.optim.weight_decay, 'lr':config.optimization.optim.lr,
+               'freeze_grads': config.tune.freeze_grads,
+               'alpha': config.barlow_twins.alpha})
+    logger.info('ZERO-SHOT RESULTS')
+    logger.info(f'{results}')
 
 
     ##### Now fine tune model  #####
-    print('MODEL PRED LM_CLF DEVICE FIT', next(lm_clf.model.parameters()).device)
+    logger.debug(f'MODEL PRED LM_CLF DEVICE FIT {next(lm_clf.model.parameters()).device}')
     trainer.fit(lm_clf, datamodule=ldm)
 
     ################  Fine Tuned Model  Evaluation ########################
@@ -299,8 +291,8 @@ if __name__ == "__main__":
                'f1':results['f1'], 'bin_acc' : results['bin_acc']})
     # Log the config file in wandb online platform
     wandb.save('/home/poulinakis/Multimodal-Barlow-Twins/configs/my-config.yml')
-    print(' RESULTS FINE TUNED ')
-    print(results)
+    logger.info('FINE TUNED MODEL RESULTS')
+    logger.info(f'{results}')
 
     exit()
 

@@ -16,7 +16,7 @@ if __name__=='__main__':
     with open(config_path) as fp:
         data = yaml.load(fp)
 
-    experiment_name = 'Testing checkpoints'
+    experiment_name = 'TEST alpha'
 
     # Define a search space for the parameters
     params = {'hidden_size': [100], # model
@@ -25,18 +25,19 @@ if __name__=='__main__':
               'dropout': [0.2],
               'weight_decay_ssl': [0.0],   # optimization
               'weight_decay': [0.0],
-              'lr_ssl': [5e-4],
-              'lr': [5e-3],
-              'freeze_grads': [False],
-              'gauss_noise_p': [[0.5, 0.5], [0.7, 0.2]], #[[0.0, 0.0], [0.5, 0.5], , [0.9, 0.1]],
+              'lr_ssl': [3e-6],
+              'lr': [ 3e-4],
+              'freeze_grads': [True],
+              'gauss_noise_p': [[0.7, 0.2]], # [[0.0, 0.0], [0.5, 0.5], [0.7, 0.2], [0.9, 0.1]],
+              'alpha': [ 5e-3, 5e-4, 5e-5, 5e-6],
               
               'batch_size': [256],
-              'batch_size_ssl': [178],
+              'batch_size_ssl': [170],
 
-              'max_epochs': [1],    # epochs for fine tuning
-              'max_epochs_ssl': [2], #[2, 5, 10, 30, 40 ,50, 60 , 100],   # patience is set at 100 so all epochs are executed.
+              'max_epochs': [10],    # epochs for fine tuning
+              'max_epochs_ssl':  [10], #[2, 5, 10, 30, 35, 40, 50, 100],   # no early stopping is executed
            
-              'data_percentage': [10] # provide absolute value of samples (for now)
+              'data_percentage': [-1] # provide absolute value of samples (for now)
            }
 
     
@@ -59,8 +60,9 @@ if __name__=='__main__':
         data['ssl_optimization']['optim']['lr'] = parameters['lr_ssl']
         data['optimization']['optim']['weight_decay'] = parameters['weight_decay']
         data['optimization']['optim']['lr'] = parameters['lr']
+        data['optimization']['optim']['lr'] = parameters['lr']
         
-        data['tune']['freeze_grads'] = parameters['freeze_grads']
+        data['barlow_twins']['alpha'] = parameters['alpha']
 
         # batch size
         data['data']['batch_size'] = parameters['batch_size']
@@ -82,6 +84,5 @@ if __name__=='__main__':
         config = parse_config(parser, config_path)
 
         # Call training script
-        command = f'python3 experiments/mm.py --config {config_path} --gpus 1 --offline'
+        command = f'python3 experiments/mm.py --config {config_path} --gpus 1 '
         os.system(command)
-    #subprocess.call(["python", "experiments/mm.py", "--config configs/my-config.yml", "--offline"])
