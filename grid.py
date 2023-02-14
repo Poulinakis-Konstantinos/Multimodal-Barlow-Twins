@@ -9,14 +9,14 @@ from datetime import datetime
 
 
 if __name__=='__main__':
-    config_path = '/home/poulinakis/Multimodal-Barlow-Twins/configs/my-config.yml'
+    config_path = '/home/poulinakis/Multimodal-Barlow-Twins/configs/my-config_2.yml'
     # load the config
     yaml = ruamel.yaml.YAML()
     # yaml.preserve_quotes = True
     with open(config_path) as fp:
         data = yaml.load(fp)
 
-    experiment_name = 'TEST alpha'
+    experiment_name = 'BASELINE SUPERVISED PERCENTAGE'
 
     # Define a search space for the parameters
     params = {'hidden_size': [100], # model
@@ -27,17 +27,20 @@ if __name__=='__main__':
               'weight_decay': [0.0],
               'lr_ssl': [3e-6],
               'lr': [ 3e-4],
-              'freeze_grads': [True],
-              'gauss_noise_p': [[0.7, 0.2]], # [[0.0, 0.0], [0.5, 0.5], [0.7, 0.2], [0.9, 0.1]],
-              'alpha': [ 5e-3, 5e-4, 5e-5, 5e-6],
+              'freeze_grads': [False],
+              'gauss_noise_p': [[0.0, 0.0]], # [[0.0, 0.0], [0.5, 0.5], [0.7, 0.2], [0.9, 0.1]],
+              'alpha': [2e-2], #5e-2, 1e-1],
               
-              'batch_size': [256],
+              'batch_size': [32],
               'batch_size_ssl': [170],
 
-              'max_epochs': [10],    # epochs for fine tuning
-              'max_epochs_ssl':  [10], #[2, 5, 10, 30, 35, 40, 50, 100],   # no early stopping is executed
+              'max_epochs': [100],    # epochs for fine tuning
+              'max_epochs_ssl':  [1], #[2, 5, 10, 30, 35, 40, 50, 100],   # no early stopping is executed
            
-              'data_percentage': [-1] # provide absolute value of samples (for now)
+              'data_percentage': [0.01, 0.1, 0.3, 0.6, 0.8, -1], # -1 for full dataset
+              'data_percentage_ssl': [0.001],   # -1 for full , 0.001 for "nothing"
+
+              'transformation_order': [ ['noise', 'masking'] ]
            }
 
     
@@ -47,6 +50,7 @@ if __name__=='__main__':
     for i, parameters in enumerate(list(ParameterGrid(params))):
         fr = parameters['freeze_grads']
         data['run_name'] = f'freeze_grads={fr}_{str(datetime.now())}'
+        data['tune']['freeze_grads'] = parameters['freeze_grads']
         data['trainer']['max_epochs'] = parameters['max_epochs']
         data['trainer_ssl']['max_epochs'] = parameters['max_epochs_ssl']
 
@@ -70,8 +74,10 @@ if __name__=='__main__':
         data['data']['data_percentage'] = parameters['data_percentage']
         data['data_ssl']['batch_size'] = parameters['batch_size_ssl']
         data['data_ssl']['batch_size_eval'] = parameters['batch_size_ssl']
+        data['data_ssl']['data_percentage'] = parameters['data_percentage_ssl']
 
         # SSL transformations
+        data['transformations']['order'] = parameters['transformation_order']
         data['transformations']['gauss_noise_p'] = parameters['gauss_noise_p']
 
         # save new config values 

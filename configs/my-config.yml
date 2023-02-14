@@ -10,7 +10,7 @@ model:
   packed_sequence: true
   merge_bi: sum
   rnn_type: lstm
-  attention: true
+  attention: false
   nystrom: false
   num_landmarks: 32
   num_layers: 1
@@ -26,6 +26,8 @@ model:
   use_m3_sequential: false
 
 transformations:
+  order:
+  - noise
   mm_aug_p:
   - 0.
   - 0.
@@ -40,7 +42,7 @@ transformations:
   - 0.1
 
 barlow_twins:
-  alpha: 0.005
+  alpha: 0.02
   projector_size:
   - 1000
   - 1000
@@ -57,7 +59,7 @@ preprocessing:
 ssl_optimization:
   optimizer: Adam
   optim:
-    lr: 0.0005
+    lr: 3e-06
     weight_decay: 0.0
   lr_scheduler: true
   lr_schedule:
@@ -69,7 +71,7 @@ ssl_optimization:
 optimization:
   optimizer: Adam
   optim:
-    lr: 0.005
+    lr: 0.0003
     weight_decay: 0.0
   lr_scheduler: true
   lr_schedule:
@@ -92,11 +94,11 @@ trainer:
   accelerator: dp
   check_val_every_n_epoch: 1
   gradient_clip_val: 0
-  max_epochs: 1
+  max_epochs: 100
   force_wandb_offline: false
   early_stop_on: val_loss
   early_stop_mode: min
-  experiment_name: Testing checkpoints
+  experiment_name: SSL PERCENT
   experiment_description: First trial for MMBT
 
 trainer_ssl:
@@ -111,18 +113,17 @@ trainer_ssl:
   accelerator: dp
   check_val_every_n_epoch: 1
   gradient_clip_val: 0
-  max_epochs: 2
+  max_epochs: 20
   early_stop_on: None
   early_stop_mode: min
   force_wandb_offline: false
-  experiment_name: Testing checkpoints
-  experiment_description: First trial for MMBT
-
+  experiment_name: SSL PERCENT
+  experiment_description: ' '
 debug: false
 
 
 tune:
-  freeze_grads: false
+  freeze_grads: true
   # num_trials: 100
   # gpus_per_trial: 0.5
   # cpus_per_trial: 1
@@ -130,33 +131,35 @@ tune:
   # mode: min
 
 data:
-  val_percent: 0.2
-  test_percent: 0.2
-  batch_size: 256
-  batch_size_eval: 256
+  val_percent: 0.0
+  test_percent: 0.0
+  batch_size: 32
+  batch_size_eval: 32
   num_workers: 4
   pin_memory: true
   drop_last: false
   shuffle_eval: true
-  data_percentage: 10
+  data_percentage: 0.7
 
 data_ssl:
   val_percent: 0.0
   test_percent: 0.0
-  batch_size: 178
-  batch_size_eval: 178
+  batch_size: 170
+  batch_size_eval: 170
   num_workers: 4
   pin_memory: true
   drop_last: false
   shuffle_eval: true
+  data_percentage: 1
 
 seed:
+
 modalities:
 - text
 - audio
 - visual
 
 # utils
-run_name: freeze_grads=False_2023-01-27 21:03:14.234023
+run_name: freeze_grads=True_2023-02-14 16:20:35.087428
 
 #config: configs/best.mosei.rnn.symattn.rnn.yml
