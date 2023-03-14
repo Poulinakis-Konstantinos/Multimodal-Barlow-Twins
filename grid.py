@@ -32,7 +32,7 @@ if __name__=='__main__':
 
               # SSL transformations 
               'gauss_noise_p': [[1.0, 0.0]], # [[0.0, 0.0], [0.5, 0.5], [0.7, 0.2], [0.9, 0.1]],
-              'gauss_noise_mean': [[0.03, 0.03]],
+              'gauss_noise_std': [[0.03, 0.03]],
               'masking_p' : [[1.0, 0.0]], #[[0.8, 0.0], [0.5, 0.0], [0.2, 0.0], [0.1, 0.0]],
               'mask_percentage': [[0.6, 0.0]], 
               
@@ -84,7 +84,7 @@ if __name__=='__main__':
         # SSL transformations
         data['transformations']['order'] = parameters['transformation_order']
         data['transformations']['gauss_noise_p'] = parameters['gauss_noise_p']
-        data['transformations']['gauss_noise_mean'] = parameters['gauss_noise_mean']
+        data['transformations']['gauss_noise_std'] = parameters['gauss_noise_std']
         data['transformations']['masking_p'] = parameters['masking_p']
         data['transformations']['mask_percentage'] = parameters['mask_percentage']
 
