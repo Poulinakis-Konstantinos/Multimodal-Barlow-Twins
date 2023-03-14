@@ -9,14 +9,14 @@ from datetime import datetime
 
 
 if __name__=='__main__':
-    config_path = '/home/poulinakis/Multimodal-Barlow-Twins/configs/my-config_2.yml'
+    config_path = '/home/poulinakis/Multimodal-Barlow-Twins/configs/my-config.yml'
     # load the config
     yaml = ruamel.yaml.YAML()
     # yaml.preserve_quotes = True
     with open(config_path) as fp:
         data = yaml.load(fp)
 
-    experiment_name = 'BASELINE SUPERVISED PERCENTAGE'
+    experiment_name = 'TEST CODE'
 
     # Define a search space for the parameters
     params = {'hidden_size': [100], # model
@@ -28,17 +28,22 @@ if __name__=='__main__':
               'lr_ssl': [3e-6],
               'lr': [ 3e-4],
               'freeze_grads': [False],
-              'gauss_noise_p': [[0.0, 0.0]], # [[0.0, 0.0], [0.5, 0.5], [0.7, 0.2], [0.9, 0.1]],
               'alpha': [2e-2], #5e-2, 1e-1],
+
+              # SSL transformations 
+              'gauss_noise_p': [[1.0, 0.0]], # [[0.0, 0.0], [0.5, 0.5], [0.7, 0.2], [0.9, 0.1]],
+              'gauss_noise_mean': [[0.03, 0.03]],
+              'masking_p' : [[1.0, 0.0]], #[[0.8, 0.0], [0.5, 0.0], [0.2, 0.0], [0.1, 0.0]],
+              'mask_percentage': [[0.6, 0.0]], 
               
               'batch_size': [32],
               'batch_size_ssl': [170],
 
-              'max_epochs': [100],    # epochs for fine tuning
-              'max_epochs_ssl':  [1], #[2, 5, 10, 30, 35, 40, 50, 100],   # no early stopping is executed
+              'max_epochs': [2],    # epochs for fine tuning
+              'max_epochs_ssl':  [2], #[2, 5, 10, 30, 35, 40, 50, 100],   # no early stopping is executed
            
-              'data_percentage': [0.01, 0.1, 0.3, 0.6, 0.8, -1], # -1 for full dataset
-              'data_percentage_ssl': [0.001],   # -1 for full , 0.001 for "nothing"
+              'data_percentage': [-1], #[0.01, 0.1, 0.3, 0.6, 0.8, -1], # -1 for full dataset
+              'data_percentage_ssl': [-1], #[0.001],   # -1 for full , 0.001 for "nothing"
 
               'transformation_order': [ ['noise', 'masking'] ]
            }
@@ -79,6 +84,9 @@ if __name__=='__main__':
         # SSL transformations
         data['transformations']['order'] = parameters['transformation_order']
         data['transformations']['gauss_noise_p'] = parameters['gauss_noise_p']
+        data['transformations']['gauss_noise_mean'] = parameters['gauss_noise_mean']
+        data['transformations']['masking_p'] = parameters['masking_p']
+        data['transformations']['mask_percentage'] = parameters['mask_percentage']
 
         # save new config values 
         with open(config_path, 'w') as fp:
@@ -90,5 +98,5 @@ if __name__=='__main__':
         config = parse_config(parser, config_path)
 
         # Call training script
-        command = f'python3 experiments/mm.py --config {config_path} --gpus 1 '
+        command = f'python3 experiments/mm.py --config {config_path} --gpus 1 --offline'
         os.system(command)

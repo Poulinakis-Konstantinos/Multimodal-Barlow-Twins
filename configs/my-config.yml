@@ -20,7 +20,6 @@ model:
   multi_modal_drop: mmdrop_hard   # other options are "dropout", "mmdrop_soft", "mmdrop_hard"
   mmdrop_before_fuse: false
   mmdrop_after_fuse: false
-  p_mmdrop: 0.25
   p_drop_modalities: [0.6, 0.2, 0.2]
   use_m3_masking: false
   use_m3_sequential: false
@@ -28,19 +27,25 @@ model:
 transformations:
   order:
   - noise
+  - masking
   mm_aug_p:
   - 0.
   - 0.
   gauss_noise_p:
-  - 0.7
-  - 0.2
+  - 1.0
+  - 0.0
   gauss_noise_mean:
-  - 0.0
-  - 0.0
+  - 0.03
+  - 0.03
   gauss_noise_std:
-  - 0.1
-  - 0.1
-
+  - 0.03
+  - 0.03
+  masking_p:         # probability of randomly applying masking
+  - 1.0
+  - 0.0
+  mask_percentage:   # percentage of time step features that is masked 
+  - 0.6
+  - 0.0
 barlow_twins:
   alpha: 0.02
   projector_size:
@@ -94,11 +99,11 @@ trainer:
   accelerator: dp
   check_val_every_n_epoch: 1
   gradient_clip_val: 0
-  max_epochs: 100
+  max_epochs: 2
   force_wandb_offline: false
   early_stop_on: val_loss
   early_stop_mode: min
-  experiment_name: SSL PERCENT
+  experiment_name: TEST CODE
   experiment_description: First trial for MMBT
 
 trainer_ssl:
@@ -113,17 +118,17 @@ trainer_ssl:
   accelerator: dp
   check_val_every_n_epoch: 1
   gradient_clip_val: 0
-  max_epochs: 20
+  max_epochs: 2
   early_stop_on: None
   early_stop_mode: min
   force_wandb_offline: false
-  experiment_name: SSL PERCENT
+  experiment_name: TEST CODE
   experiment_description: ' '
 debug: false
 
 
 tune:
-  freeze_grads: true
+  freeze_grads: false
   # num_trials: 100
   # gpus_per_trial: 0.5
   # cpus_per_trial: 1
@@ -139,7 +144,7 @@ data:
   pin_memory: true
   drop_last: false
   shuffle_eval: true
-  data_percentage: 0.7
+  data_percentage: -1
 
 data_ssl:
   val_percent: 0.0
@@ -150,7 +155,7 @@ data_ssl:
   pin_memory: true
   drop_last: false
   shuffle_eval: true
-  data_percentage: 1
+  data_percentage: -1
 
 seed:
 
@@ -160,6 +165,6 @@ modalities:
 - visual
 
 # utils
-run_name: freeze_grads=True_2023-02-14 16:20:35.087428
+run_name: freeze_grads=False_2023-03-14 18:27:31.621282
 
 #config: configs/best.mosei.rnn.symattn.rnn.yml

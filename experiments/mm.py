@@ -128,7 +128,8 @@ if __name__ == "__main__":
         dropout=config.model.dropout,
         nystrom=False,
         multi_modal_drop=config.model.multi_modal_drop,
-        p_mmdrop=config.model.p_mmdrop,
+        masking_p=config.transformations.masking_p,
+        masking_percentage = config.transformations.mask_percentage,
         mmdrop_before_fuse=config.model.mmdrop_before_fuse,
         mmdrop_after_fuse=config.model.mmdrop_after_fuse,
         p_drop_modalities=config.model.p_drop_modalities,
@@ -136,9 +137,6 @@ if __name__ == "__main__":
         p_aug=config.model.p_augment,
     )
 
-    # device = device("cuda" if cuda.is_available() else "cpu")
-    # ssl_model= nn.DataParallel(ssl_model)
-    # ssl_model.to(device)
     # define optimizer and lr configs
     optimizer = Adam(
         [p for p in ssl_model.parameters() if p.requires_grad],
@@ -184,6 +182,10 @@ if __name__ == "__main__":
             "dropout": config.dropout,
             "p_noise1": list(config.transformations.gauss_noise_p)[0],
             "p_noise2": list(config.transformations.gauss_noise_p)[1],
+            "p_masking1": list(config.transformations.masking_p)[0],
+            "p_masking2": list(config.transformations.masking_p)[1],
+            "masking_percentage1": list(config.transformations.mask_percentage)[0],
+            "masking_percentage2": list(config.transformations.mask_percentage)[1],
             "data_ssl": config.data_ssl.data_percentage,
         }
     )
@@ -199,6 +201,8 @@ if __name__ == "__main__":
         num_layers=config.model.num_layers,
         projector_size=config.barlow_twins.projector_size,
         mm_aug_probs=config.transformations.mm_aug_p,
+        masking_p= config.transformations.masking_p,
+        masking_percentage=config.transformations.mask_percentage,
         gauss_noise_p=config.transformations.gauss_noise_p,
         gauss_noise_m=config.transformations.gauss_noise_mean,
         gauss_noise_std=config.transformations.gauss_noise_std,
@@ -320,9 +324,6 @@ if __name__ == "__main__":
     logger.info(f"{results}")
 
     ##### Now fine tune model  #####
-    logger.debug(
-        f"MODEL PRED LM_CLF DEVICE FIT {next(lm_clf.model.parameters()).device}"
-    )
     trainer.fit(lm_clf, datamodule=ldm)
 
     ################  Fine Tuned Model  Evaluation ########################
@@ -348,30 +349,3 @@ if __name__ == "__main__":
     logger.info(f"{results}")
 
     exit()
-
-    # uncomment the following lines if you want result logging for multiple runs
-
-    # import csv
-    # import os
-
-    # csv_folder_path = os.path.join(
-    #     config.trainer.experiments_folder, config.trainer.experiment_name, "results_csv"
-    # )
-
-    # csv_name = os.path.join(csv_folder_path, "results.csv")
-    # fieldnames = list(results.keys())
-
-    # if is_file(csv_name):
-    #     # folder already exits and so does the .csv
-    #     csv_exists = True
-    #     print(f"csv already exists")
-    # else:
-    #     csv_exists = False
-    #     safe_mkdirs(csv_folder_path)
-
-    # with open(csv_name, "a") as csv_file:
-    #     writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
-
-    #     if not csv_exists:
-    #         writer.writeheader()
-    #     writer.writerow(results)
