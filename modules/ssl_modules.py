@@ -81,6 +81,7 @@ class Multimodal_Barlow_Twins(nn.Module):
         transformation_order: Optional[List[str]]=['noise'],
         masking_p=[1.0, 0],
         masking_percentage = [1.0, 0.0],
+        masking_mode = 'timestep',
         mm_aug_probs=[0.2, 0.2],
         gauss_noise_p=[0.5, 0.1],
         gauss_noise_m=[0.0, 0.0],
@@ -158,6 +159,7 @@ class Multimodal_Barlow_Twins(nn.Module):
             masking_p2=masking_p[1],
             masking_percentage_1 = masking_percentage[0],
             masking_percentage_2 = masking_percentage[1],
+            masking_mode = masking_mode
         )
 
         logger.info(f" SSL Transformations: {self.transformations}")

@@ -113,6 +113,9 @@ if __name__ == "__main__":
         num_layers=config.model.num_layers,
         projector_size=config.barlow_twins.projector_size,
         mm_aug_probs=config.transformations.mm_aug_p,
+        masking_p=config.transformations.masking_p,
+        masking_percentage = config.transformations.mask_percentage,
+        masking_mode= config.transformations.masking_mode,
         gauss_noise_p=config.transformations.gauss_noise_p,
         gauss_noise_m=config.transformations.gauss_noise_mean,
         gauss_noise_std=config.transformations.gauss_noise_std,
@@ -128,8 +131,6 @@ if __name__ == "__main__":
         dropout=config.model.dropout,
         nystrom=False,
         multi_modal_drop=config.model.multi_modal_drop,
-        masking_p=config.transformations.masking_p,
-        masking_percentage = config.transformations.mask_percentage,
         mmdrop_before_fuse=config.model.mmdrop_before_fuse,
         mmdrop_after_fuse=config.model.mmdrop_after_fuse,
         p_drop_modalities=config.model.p_drop_modalities,
@@ -186,6 +187,7 @@ if __name__ == "__main__":
             "p_masking2": list(config.transformations.masking_p)[1],
             "masking_percentage1": list(config.transformations.mask_percentage)[0],
             "masking_percentage2": list(config.transformations.mask_percentage)[1],
+            "masking_mode": config.transformations.masking_mode,
             "data_ssl": config.data_ssl.data_percentage,
         }
     )

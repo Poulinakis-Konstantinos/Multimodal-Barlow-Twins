@@ -58,7 +58,7 @@ class Masking(nn.Module):
         return mods
 
     def __repr__(self):
-        return self.__class__.__name__ + "(p_mask={0})".format(self.p_mask)
+        return self.__class__.__name__ + "(p_mask={0}, mode={1})".format(self.p_mask, self.mode)
 
 
 class Multimodal_masking_augmentator:
@@ -97,48 +97,6 @@ class Gaussian_noise(object):
         )
 
 
-# class Guassian_noise_augmentator(object):
-#     def __init__(
-#         self,
-#         noise_p1=0.7,
-#         noise_p2=0.2,
-#         noise_mean1=0.0,
-#         noise_mean2=0.0,
-#         noise_std1=0.1,
-#         noise_std2=0.1,
-#     ) -> None:
-#         """Holds 2 torchvision.transforms.RandomApply transformations with the Gaussian_noise transformation.
-#         Used in self-supervised training to create two distorted views of the same object [transform, transform_prime]
-
-#         Args:
-#             noise_p1 (float, optional): Noise probability for transform. Defaults to 0.7.
-#             noise_p2 (float, optional): Noise probability for transform_prime. Defaults to 0.2.
-#             noise_mean1 (float, optional): Noise distribution mean value for transform. Defaults to 0.0.
-#             noise_mean2 (float, optional): Noise distribution mean value for transform_prime. Defaults to 0.0.
-#             noise_std1 (float, optional): Noise distribution std for transform. Defaults to 0.1.
-#             noise_std2 (float, optional): Noise distribution std for transform_prime. Defaults to 0.1.
-#         """
-
-#         self.noise_mean1 = noise_mean1
-#         self.noise_mean2 = noise_mean2
-#         self.noise_std1 = noise_std1
-#         self.noise_std2 = noise_std2
-#         self.noise_p1 = noise_p1
-#         self.noise_p2 = noise_p2
-
-#         self.transform = transforms.RandomApply(
-#             [Gaussian_noise(mean=noise_mean1, std=noise_std1)], p=noise_p1
-#         )
-#         self.transform_prime = transforms.RandomApply(
-#             [Gaussian_noise(mean=noise_mean2, std=noise_std2)], p=noise_p2
-#         )
-
-#     def __repr__(self):
-#         return self.__class__.__name__ + "T1: (mean={0}, std={1})".format(
-#             self.noise_mean1, self.noise_std1
-#         )
-
-
 class Transformator:
     def __init__(
         self,
@@ -153,9 +111,9 @@ class Transformator:
         masking_p2=0.0,
         masking_percentage_1=0.5,
         masking_percentage_2=0.5,
+        masking_mode = 'timestep',
         p_mod1: Optional[List[float]] = None,
         p_mod2: Optional[List[float]] = None,
-        mode: str = "hard",
         m3_sequential: bool = True,
     ) -> None:
         """ Wrapper class for other augmentation functions. It combines, controls the probability of application
@@ -197,10 +155,10 @@ class Transformator:
             ],
             "masking": [
             transforms.RandomApply(
-                [Masking(masking_percentage_1)], masking_p1
+                [Masking(masking_percentage_1, masking_mode)], masking_p1
                 ),
             transforms.RandomApply(
-                [Masking(masking_percentage_2)], masking_p2 
+                [Masking(masking_percentage_2, masking_mode)], masking_p2 
                 )
             ]
         }
@@ -280,3 +238,43 @@ class Transform:
         return self.__class__.__name__ + "(transform_1={0}, transform_2={1})".format(
             self.transform, self.transform_prime
         )
+# class Guassian_noise_augmentator(object):
+#     def __init__(
+#         self,
+#         noise_p1=0.7,
+#         noise_p2=0.2,
+#         noise_mean1=0.0,
+#         noise_mean2=0.0,
+#         noise_std1=0.1,
+#         noise_std2=0.1,
+#     ) -> None:
+#         """Holds 2 torchvision.transforms.RandomApply transformations with the Gaussian_noise transformation.
+#         Used in self-supervised training to create two distorted views of the same object [transform, transform_prime]
+
+#         Args:
+#             noise_p1 (float, optional): Noise probability for transform. Defaults to 0.7.
+#             noise_p2 (float, optional): Noise probability for transform_prime. Defaults to 0.2.
+#             noise_mean1 (float, optional): Noise distribution mean value for transform. Defaults to 0.0.
+#             noise_mean2 (float, optional): Noise distribution mean value for transform_prime. Defaults to 0.0.
+#             noise_std1 (float, optional): Noise distribution std for transform. Defaults to 0.1.
+#             noise_std2 (float, optional): Noise distribution std for transform_prime. Defaults to 0.1.
+#         """
+
+#         self.noise_mean1 = noise_mean1
+#         self.noise_mean2 = noise_mean2
+#         self.noise_std1 = noise_std1
+#         self.noise_std2 = noise_std2
+#         self.noise_p1 = noise_p1
+#         self.noise_p2 = noise_p2
+
+#         self.transform = transforms.RandomApply(
+#             [Gaussian_noise(mean=noise_mean1, std=noise_std1)], p=noise_p1
+#         )
+#         self.transform_prime = transforms.RandomApply(
+#             [Gaussian_noise(mean=noise_mean2, std=noise_std2)], p=noise_p2
+#         )
+
+#     def __repr__(self):
+#         return self.__class__.__name__ + "T1: (mean={0}, std={1})".format(
+#             self.noise_mean1, self.noise_std1
+#         )
