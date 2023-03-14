@@ -79,10 +79,12 @@ class Multimodal_Barlow_Twins(nn.Module):
         num_classes=1,
         ssl_mode=True,
         transformation_order: Optional[List[str]]=['noise'],
+        masking_p=[1.0, 0],
+        masking_percentage = [1.0, 0.0],
         mm_aug_probs=[0.2, 0.2],
+        gauss_noise_p=[0.5, 0.1],
         gauss_noise_m=[0.0, 0.0],
         gauss_noise_std=[0.1, 0.1],
-        gauss_noise_p=[0.5, 0.1],
         num_layers=1,
         bidirectional=True,
         rnn_type="lstm",
@@ -90,7 +92,6 @@ class Multimodal_Barlow_Twins(nn.Module):
         hidden_size=100,
         dropout=0.1,
         projector_size=[],
-        p_mmdrop=0.0,
         p_drop_modalities=None,
         multi_modal_drop="mmdrop_hard",
         mmdrop_before_fuse=True,
@@ -147,15 +148,19 @@ class Multimodal_Barlow_Twins(nn.Module):
         logger.info("Self-Training :", self.ssl_mode)
         self.transformations = Transformator(
             transformation_order,
-            mm_aug_probs[0],
-            mm_aug_probs[1],
-            gauss_noise_p[0],
-            gauss_noise_p[1],
-            gauss_noise_m[0],
-            gauss_noise_m[1],
-            gauss_noise_std[0],
-            gauss_noise_std[1],
+            noise_p1=gauss_noise_p[0],
+            noise_p2=gauss_noise_p[1],
+            noise_mean1=gauss_noise_m[0],
+            noise_mean2=gauss_noise_m[1],
+            noise_std1=gauss_noise_std[0],
+            noise_std2=gauss_noise_std[1],
+            masking_p1=masking_p[0],
+            masking_p2=masking_p[1],
+            masking_percentage_1 = masking_percentage[0],
+            masking_percentage_2 = masking_percentage[1],
         )
+
+        logger.info(f" SSL Transformations: {self.transformations}")
 
         self.encoder = AudioVisualTextEncoder(
             feature_sizes,
@@ -165,7 +170,7 @@ class Multimodal_Barlow_Twins(nn.Module):
             attention=attention,
             hidden_size=hidden_size,
             dropout=dropout,
-            p_mmdrop=p_mmdrop,
+            p_mmdrop=0,
             p_drop_modalities=p_drop_modalities,
             multi_modal_drop=multi_modal_drop,
             mmdrop_before_fuse=mmdrop_before_fuse,
@@ -202,28 +207,27 @@ class Multimodal_Barlow_Twins(nn.Module):
         # create two views of the same input. We use a different set of augmentations for each input.
         inputs1 = {}
         inputs2 = {}
-        for modality in ["text", "audio", "visual"]:
-            inputs1[modality], inputs2[modality] = self.transformations(
-                inputs[modality]
-            )
-            # inputs1, inputs2 = self.transformations(inputs)
-
         if self.ssl_mode:
+            inputs1, inputs2 = self.transformations(
+                                                    inputs["text"],
+                                                    inputs["audio"],
+                                                    inputs["visual"]
+                                                    )
             # fused Encoder's output
             z1 = self.projector(
                 self.encoder(
-                    inputs1["text"],
-                    inputs1["audio"],
-                    inputs1["visual"],
+                    inputs1[0],
+                    inputs1[1],
+                    inputs1[2],
                     lengths["text"],
                 )
             )
 
             z2 = self.projector(
                 self.encoder(
-                    inputs2["text"],
-                    inputs2["audio"],
-                    inputs2["visual"],
+                    inputs2[0],
+                    inputs2[1],
+                    inputs2[2],
                     lengths["text"],
                 )
             )
@@ -235,9 +239,9 @@ class Multimodal_Barlow_Twins(nn.Module):
         else:
             return self.clf(
                 self.encoder(
-                    inputs1["text"],
-                    inputs1["audio"],
-                    inputs1["visual"],
+                    inputs["text"],
+                    inputs["audio"],
+                    inputs["visual"],
                     lengths["text"],
                 )
             )
