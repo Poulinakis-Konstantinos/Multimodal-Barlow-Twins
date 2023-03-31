@@ -180,7 +180,7 @@ if __name__ == "__main__":
             "proj_size": list(config.barlow_twins.projector_size)[-1],
             "weight_decay_ssl": config.ssl_optimization.optim.weight_decay,  # the only not shared
             "lr_ssl": config.ssl_optimization.optim.lr,  # the only not shared
-            "dropout": config.dropout,
+            "dropout": config.model.dropout,
             "p_noise1": list(config.transformations.gauss_noise_p)[0],
             "p_noise2": list(config.transformations.gauss_noise_p)[1],
             "noise_std1": list(config.transformations.gauss_noise_std)[0],
