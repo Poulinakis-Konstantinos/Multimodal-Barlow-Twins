@@ -581,7 +581,7 @@ class SimplePLModule(pl.LightningModule):
         if self.trainer.early_stopping_callback != None :
             logger.debug(f'EARLY STOP MONITOR VALUE = { self.trainer.early_stopping_callback.monitor} ')
             outputs["best_score"] = min(
-                outputs[self.trainer.early_stopping_callback.monitor].detach().cpu(),
+                outputs[self.trainer.early_stopping_callback.monitor],#.detach().cpu(),
                 self.trainer.early_stopping_callback.best_score.detach().cpu(),
             )
 
