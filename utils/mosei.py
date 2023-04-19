@@ -59,6 +59,34 @@ def mosei_run_test(lm, test_loader, ckpt_path, modalities, load_best):
 
     return results
 
+def mosei_knn_test(lm, test_loader, ckpt_path, modalities, load_best):
+    if load_best :
+        ckpt = torch.load(ckpt_path, map_location="cpu")
+        lm.load_state_dict(ckpt["state_dict"])
+    lm = lm.cuda()
+
+    preds = []
+    labels = []
+
+    for batch in test_loader:
+        lm.eval()
+
+        for m in modalities:
+            batch[0][m] = batch[0][m].cuda()
+            batch[2][m] = batch[2][m].cuda()
+        batch[1] = batch[1].cuda()
+        y_hat, targets = lm.predictor.get_predictions_and_targets(lm.model, batch)
+        preds.append(y_hat.detach().cpu())
+        labels.append(targets.detach().cpu())
+
+    preds = torch.cat(preds, dim=0)
+    labels = torch.cat(labels, dim=0)
+
+    results = eval_mosei_senti(preds, labels, exclude_zero=True)
+
+    return results
+
+
 
 def get_mosei_parser():
     parser = ArgumentParser("Transformer-MOSEI example")

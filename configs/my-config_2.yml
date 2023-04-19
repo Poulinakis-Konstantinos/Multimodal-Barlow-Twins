@@ -1,0 +1,170 @@
+model:
+  feature_sizes:
+    audio: 74
+    visual: 35
+    text: 300
+  max_length: -1
+  kernel_size: 33 # used for cnn residual trick
+  batch_first: true
+  bidirectional: false
+  packed_sequence: true
+  merge_bi: sum
+  rnn_type: lstm
+  attention: false
+  nystrom: false
+  num_landmarks: 32
+  num_layers: 1
+  num_heads: 1
+  dropout: 0.2
+  hidden_size: 100
+  multi_modal_drop: mmdrop_hard   # other options are "dropout", "mmdrop_soft", "mmdrop_hard"
+  mmdrop_before_fuse: false
+  mmdrop_after_fuse: false
+  p_drop_modalities: [0.6, 0.2, 0.2]
+  use_m3_masking: false
+  use_m3_sequential: false
+
+transformations:
+  order:
+  - masking
+  mm_aug_p:
+  - 0.
+  - 0.
+  gauss_noise_p:
+  - 0.0
+  - 0.0
+  gauss_noise_mean:
+  - 0.00
+  - 0.00
+  gauss_noise_std:
+  - 0
+  - 0
+  masking_p:         # probability of randomly applying masking
+  - 0.3
+  - 0.3
+  mask_percentage:   # percentage of time step features that is masked 
+  - 0.7
+  - 0.2
+  masking_mode: timestep  # "timestep" or "feature"
+barlow_twins:
+  alpha: 0.02
+  projector_size:
+  - 1000
+  - 1000
+  - 1000
+
+preprocessing:
+  max_length: -1
+  pad_front: true
+  pad_back: false
+  remove_pauses: true
+  already_aligned: true
+  align_features: false
+
+ssl_optimization:
+  optimizer: Adam
+  optim:
+    lr: 3e-06
+    weight_decay: 0.0
+  lr_scheduler: true
+  lr_schedule:
+    factor: 0.5
+    patience: 2
+    cooldown: 2
+    min_lr: 25e-6
+
+optimization:
+  optimizer: Adam
+  optim:
+    lr: 0.0003
+    weight_decay: 0.0
+  lr_scheduler: true
+  lr_schedule:
+    factor: 0.5
+    patience: 2
+    cooldown: 2
+    min_lr: 25e-6
+
+
+
+trainer:
+  experiments_folder: eda
+  save_top_k: 1
+  patience: 5
+  tags:
+  - mosei
+  - rnn-baseline
+  stochastic_weight_avg: false
+  gpus: 1
+  accelerator: dp
+  check_val_every_n_epoch: 1
+  gradient_clip_val: 0
+  max_epochs: 100
+  force_wandb_offline: false
+  early_stop_on: val_loss
+  early_stop_mode: min
+  experiment_name: MASKING PERCENT
+  experiment_description: First trial for MMBT
+
+trainer_ssl:
+  experiments_folder: eda
+  save_top_k: 5
+  patience: 100
+  tags:
+  - mosei
+  - rnn-baseline
+  stochastic_weight_avg: false
+  gpus: 1
+  accelerator: dp
+  check_val_every_n_epoch: 1
+  gradient_clip_val: 0
+  max_epochs: 20
+  early_stop_on: None
+  early_stop_mode: min
+  force_wandb_offline: false
+  experiment_name: MASKING PERCENT
+  experiment_description: ' '
+debug: false
+
+
+tune:
+  freeze_grads: false
+  # num_trials: 100
+  # gpus_per_trial: 0.5
+  # cpus_per_trial: 1
+  # metric: validation_loss
+  # mode: min
+
+data:
+  val_percent: 0.0
+  test_percent: 0.0
+  batch_size: 32
+  batch_size_eval: 32
+  num_workers: 4
+  pin_memory: true
+  drop_last: false
+  shuffle_eval: true
+  data_percentage: -1
+
+data_ssl:
+  val_percent: 0.0
+  test_percent: 0.0
+  batch_size: 170
+  batch_size_eval: 170
+  num_workers: 4
+  pin_memory: true
+  drop_last: false
+  shuffle_eval: true
+  data_percentage: -1
+
+seed:
+
+modalities:
+- text
+- audio
+- visual
+
+# utils
+run_name: freeze_grads=False_2023-04-01 00:07:31.690050
+
+#config: configs/best.mosei.rnn.symattn.rnn.yml

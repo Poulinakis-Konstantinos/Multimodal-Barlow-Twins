@@ -56,7 +56,7 @@ class HardMultimodalMasking(nn.Module):
             if random.random() < self.p:
                 # mask different modality for each sample in batch
 
-                if self.m3_sequential: # mask different modality at every timestep
+                if self.m3_sequential:  # mask different modality at every timestep
                     bsz, seqlen = mods[0].size(0), mods[0].size(1)
                     p_modal = torch.distributions.categorical.Categorical(
                         torch.tensor(self.p_mod)

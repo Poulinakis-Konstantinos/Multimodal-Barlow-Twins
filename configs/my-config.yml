@@ -15,7 +15,7 @@ model:
   num_landmarks: 32
   num_layers: 1
   num_heads: 1
-  dropout: 0.2
+  dropout: 0.5
   hidden_size: 100
   multi_modal_drop: mmdrop_hard   # other options are "dropout", "mmdrop_soft", "mmdrop_hard"
   mmdrop_before_fuse: false
@@ -26,26 +26,26 @@ model:
 
 transformations:
   order:
-  - noise
   - masking
   mm_aug_p:
   - 0.
   - 0.
   gauss_noise_p:
-  - 1.0
+  - 0.0
   - 0.0
   gauss_noise_mean:
   - 0.00
   - 0.00
   gauss_noise_std:
-  - 0.03
-  - 0.03
+  - 0
+  - 0
   masking_p:         # probability of randomly applying masking
-  - 1.0
-  - 0.0
-  mask_percentage:   # percentage of time step features that is masked 
   - 0.6
-  - 0.0
+  - 0.6
+  mask_percentage:   # percentage of time step features that is masked 
+  - 0.7
+  - 0.2
+  masking_mode: timestep  # "timestep" or "feature"
 barlow_twins:
   alpha: 0.02
   projector_size:
@@ -99,11 +99,11 @@ trainer:
   accelerator: dp
   check_val_every_n_epoch: 1
   gradient_clip_val: 0
-  max_epochs: 2
+  max_epochs: 100
   force_wandb_offline: false
   early_stop_on: val_loss
   early_stop_mode: min
-  experiment_name: TEST CODE
+  experiment_name: DROP EVAL
   experiment_description: First trial for MMBT
 
 trainer_ssl:
@@ -118,11 +118,11 @@ trainer_ssl:
   accelerator: dp
   check_val_every_n_epoch: 1
   gradient_clip_val: 0
-  max_epochs: 2
+  max_epochs: 1
   early_stop_on: None
   early_stop_mode: min
   force_wandb_offline: false
-  experiment_name: TEST CODE
+  experiment_name: DROP EVAL
   experiment_description: ' '
 debug: false
 
@@ -155,7 +155,7 @@ data_ssl:
   pin_memory: true
   drop_last: false
   shuffle_eval: true
-  data_percentage: -1
+  data_percentage: 0.1
 
 seed:
 
@@ -165,6 +165,6 @@ modalities:
 - visual
 
 # utils
-run_name: freeze_grads=False_2023-03-14 18:45:47.605228
+run_name: freeze_grads=False_2023-03-31 19:04:21.134562
 
 #config: configs/best.mosei.rnn.symattn.rnn.yml

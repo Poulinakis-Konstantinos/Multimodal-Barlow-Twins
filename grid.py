@@ -16,35 +16,36 @@ if __name__=='__main__':
     with open(config_path) as fp:
         data = yaml.load(fp)
 
-    experiment_name = 'SSL MASKING NEW'
+    experiment_name = 'DROP EVAL'
 
     # Define a search space for the parameters
     params = {'hidden_size': [100], # model
               'num_layers': [1],
               'bidirectional': [False],
-              'dropout': [0.2],
+              'dropout': [ 0.0, 0.2, 0.5],
               'weight_decay_ssl': [0.0],   # optimization
               'weight_decay': [0.0],
               'lr_ssl': [3e-6],
               'lr': [ 3e-4],
-              'freeze_grads': [True],
+              'freeze_grads': [False],
               'alpha': [2e-2], #5e-2, 1e-1],
 
               # SSL transformations 
-              'gauss_noise_p': [[1.0, 0.0]], # [[0.0, 0.0], [0.5, 0.5], [0.7, 0.2], [0.9, 0.1]],
-              'gauss_noise_std': [[0.03, 0.03]],
-              'masking_p' : [[1.0, 0.0]], #[[0.8, 0.0], [0.5, 0.0], [0.2, 0.0], [0.1, 0.0]],
-              'mask_percentage': [[0.6, 0.0]], 
-              'masking_mode': ['timestep', 'feature'],
+              'gauss_noise_p': [[0.0, 0.0]], # [[0.0, 0.0], [0.5, 0.5], [0.7, 0.2], [0.9, 0.1]],
+              'gauss_noise_std': [[0, 0]], # [[1.0, 1.0], [2.0, 2.0], [0.01, 0.01], [0.2, 0.2]],
+              'masking_p' : [[0.6, 0.6]],# [0.3, 0.0], [1.0, 0.0]], # [[1.0, 0.0], [0.3, 0.0]],
+              'mask_percentage': [[0.7,0.2]],#[[0.2, 0.0], [0.5, 0.0],  [0.7, 0.0], [1.0, 0.0]], #[[0.2, 0.2], [0.5, 0.5], [0.7, 0.7], [0.5, 0.2], [0.7, 0.2], [1.0, 0.2], [1.0, 0.7]], 
+              'masking_mode': ['timestep'],
               
               'batch_size': [32],
               'batch_size_ssl': [170],
 
-              'max_epochs': [1],    # epochs for fine tuning
-              'max_epochs_ssl':  [1], #[2, 5, 10, 30, 35, 40, 50, 100],   # no early stopping is executed
-           
-              'data_percentage': [-1], #[0.01, 0.1, 0.3, 0.6, 0.8, -1], # -1 for full dataset
-              'data_percentage_ssl': [-1], #[0.001],   # -1 for full , 0.001 for "nothing"
+              'max_epochs': [100],    # epochs for fine tuning                                                   # Standard is 100 with early stopping
+              'max_epochs_ssl':  [1], #[2, 5, 10, 20, 30,  40],   # no early stopping is executed       # Standard is 20
+            
+              'data_percentage': [ -1], # -1 for full dataset
+              
+              'data_percentage_ssl': [0.1], #[0.001],   # -1 for full , 0.001 for "nothing"
 
               'transformation_order': [ ['masking'] ]
            }
@@ -100,5 +101,5 @@ if __name__=='__main__':
         config = parse_config(parser, config_path)
 
         # Call training script
-        command = f'python3 experiments/mm.py --config {config_path} --gpus 1 --offline'
+        command = f'python3 experiments/mm.py --config {config_path} --gpus 1'
         os.system(command)
