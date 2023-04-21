@@ -112,13 +112,18 @@ if __name__ == "__main__":
         transformation_order=config.transformations.order, # order in which the ssl transformations are applied.
         num_layers=config.model.num_layers,
         projector_size=config.barlow_twins.projector_size,
-        mm_aug_probs=config.transformations.mm_aug_p,
+        # mmaug related parameters
+        mmaug_p=config.transformations.mmaug_p,
+        mmaug_p_t=config.transformations.mmaug_p_t,
+        # masking related parameters
         masking_p=config.transformations.masking_p,
         masking_percentage = config.transformations.mask_percentage,
         masking_mode= config.transformations.masking_mode,
+        # gaussian noise related parameters
         gauss_noise_p=config.transformations.gauss_noise_p,
         gauss_noise_m=config.transformations.gauss_noise_mean,
         gauss_noise_std=config.transformations.gauss_noise_std,
+
         batch_first=config.model.batch_first,
         bidirectional=config.model.bidirectional,
         packed_sequence=config.model.packed_sequence,
@@ -192,6 +197,10 @@ if __name__ == "__main__":
             "masking_percentage1": list(config.transformations.mask_percentage)[0],
             "masking_percentage2": list(config.transformations.mask_percentage)[1],
             "masking_mode": config.transformations.masking_mode,
+            "p_mmaug1": list(config.transformations.mmaug_p)[0],
+            "p_mmaug2": list(config.transformations.mmaug_p)[1],
+            "p_mmaug_t1": list(config.transformations.mmaug_p_t)[0],
+            "p_mmaug_t2": list(config.transformations.mmaug_p_t)[1],
             "data_ssl": config.data_ssl.data_percentage,
         }
     )
@@ -206,12 +215,17 @@ if __name__ == "__main__":
         ssl_mode=False,  # No self-supervision mode -> Supervised fine tuning
         num_layers=config.model.num_layers,
         projector_size=config.barlow_twins.projector_size,
-        mm_aug_probs=config.transformations.mm_aug_p,
+        # mmaug related parameters
+        mmaug_p=config.transformations.mmaug_p,
+        mmaug_p_t=config.transformations.mmaug_p_t,
+        # masking related parameters
         masking_p= config.transformations.masking_p,
         masking_percentage=config.transformations.mask_percentage,
+        # gauss noise related parameters
         gauss_noise_p=config.transformations.gauss_noise_p,
         gauss_noise_m=config.transformations.gauss_noise_mean,
         gauss_noise_std=config.transformations.gauss_noise_std,
+        
         batch_first=config.model.batch_first,
         bidirectional=config.model.bidirectional,
         packed_sequence=config.model.packed_sequence,

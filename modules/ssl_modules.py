@@ -82,7 +82,8 @@ class Multimodal_Barlow_Twins(nn.Module):
         masking_p=[1.0, 0],
         masking_percentage = [1.0, 0.0],
         masking_mode = 'timestep',
-        mm_aug_probs=[0.2, 0.2],
+        mmaug_p=[1.0, 0.0],
+        mmaug_p_t=[1.0, 0.0],
         gauss_noise_p=[0.5, 0.1],
         gauss_noise_m=[0.0, 0.0],
         gauss_noise_std=[0.1, 0.1],
@@ -141,6 +142,8 @@ class Multimodal_Barlow_Twins(nn.Module):
             gauss_noise_m (list[float]) : The mean values of the gaussian noises applied as transformations.
             gauss_noise_std (list[float]) : The std of the gaussian noises applied as transformations.
             gauss_noise_p  (list[float]) : The probabilities of applying gaussian noises.
+            mmaug_p (list[float]) : The probabilities of applying mm_aug to the input.
+            mm_aug_p_t (list[float]) : The probabilities of applying mm_aug to the input per timestep.
             **(kwargs)
         """
 
@@ -159,7 +162,11 @@ class Multimodal_Barlow_Twins(nn.Module):
             masking_p2=masking_p[1],
             masking_percentage_1 = masking_percentage[0],
             masking_percentage_2 = masking_percentage[1],
-            masking_mode = masking_mode
+            masking_mode = masking_mode,
+            mmaug_p1=mmaug_p[0],
+            mmaug_p2=mmaug_p[1],
+            mmaug_p1_t=mmaug_p_t[0],
+            mmaug_p2_t=mmaug_p_t[1],
         )
 
         logger.info(f" SSL Transformations: {self.transformations}")

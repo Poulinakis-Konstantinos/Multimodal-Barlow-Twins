@@ -5,21 +5,21 @@ from torch import nn
 from typing import List, Optional
 import random
 from loguru import logger
+from modules.mmaug import MMAug
 
+# class MM_Aug(object):
+#     def __init__(
+#         self,
+#         p: float = 0.2,
+#     ):
 
-class MM_Aug(object):
-    def __init__(
-        self,
-        p: float = 0.2,
-    ):
+#         self.p = p
 
-        self.p = p
+#     def __call__(self, tensor):
+#         return tensor
 
-    def __call__(self, tensor):
-        return tensor
-
-    def __repr__(self):
-        return self.__class__.__name__ + "(prob={0})".format(self.p)
+#     def __repr__(self):
+#         return self.__class__.__name__ + "(prob={0})".format(self.p)
 
 
 
@@ -112,6 +112,11 @@ class Transformator:
         masking_percentage_1=0.5,
         masking_percentage_2=0.5,
         masking_mode = 'timestep',
+        mmaug_p1= 1.0,
+        mmaug_p2= 0.0,
+        mmaug_p1_t= 1.0,
+        mmaug_p2_t= 0.0,
+
         p_mod1: Optional[List[float]] = None,
         p_mod2: Optional[List[float]] = None,
         m3_sequential: bool = True,
@@ -132,6 +137,10 @@ class Transformator:
             masking_p2 (float, optional): The probability that masking transformation will be applied to (batch) input view_2. Defaults to 0.0.
             masking_percentage_1 (float, optional): Controls the percentage of time steps masked on input view_1. Defaults to 0.5.
             masking_percentage_2 (float, optional):  Controls the percentage of time steps masked on input view_2. Defaults to 0.5.
+            mmaug_p1 (float, optional): The probability that mmaugment transformation will be applied to (batch) input view_1. Defaults to 1.0.
+            mmaug_p2 (float, optional): The probability that mmaugment transformation will be applied to (batch) input view_2. Defaults to 0.0.
+            mmag_p1_t (float, optional): Resample probabilities for each modality across timesteps. Default=1's which means that we resample at every timestep Defaults to 1.0.
+            mmaug_p2_t (float, optional): Resample probabilities for each modality across timesteps. Default=0's which means that we resample at every timestep Defaults to 1.0.
             p_mod1 (Optional[List[float]], optional): _description_. Defaults to None.
             p_mod2 (Optional[List[float]], optional): _description_. Defaults to None.
             mode (str, optional): _description_. Defaults to "hard".
@@ -139,9 +148,9 @@ class Transformator:
         """
 
         assert all(
-            isinstance(x, str) and x in ["noise", "masking"]
+            isinstance(x, str) and x in ["noise", "masking", "mmaug"]
             for x in transformation_order
-        ), "Allowed modes for transformation_order are ['noise' | 'masking']"
+        ), "Allowed modes for transformation_order are ['noise' | 'masking' | 'mmaug']"
 
         # Define transformation objects in a dict to use afterwards.
         self.instructions = {
@@ -160,7 +169,15 @@ class Transformator:
             transforms.RandomApply(
                 [Masking(masking_percentage_2, masking_mode)], masking_p2 
                 )
-            ]
+            ],
+            "mmaug": [
+            transforms.RandomApply(
+                [MMAug(p_t_mod=[mmaug_p1_t])], mmaug_p1
+                ),
+            transforms.RandomApply(
+                [MMAug(p_t_mod=[mmaug_p2_t])], mmaug_p2
+                )
+            ],
         }
 
         # Define the first transformator (using [0] key)
