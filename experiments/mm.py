@@ -114,6 +114,7 @@ if __name__ == "__main__":
         projector_size=config.barlow_twins.projector_size,
         # mmaug related parameters
         mmaug_p=config.transformations.mmaug_p,
+        mmaug_alpha=config.transformations.mmaug_alpha,
         mmaug_p_t=config.transformations.mmaug_p_t,
         # masking related parameters
         masking_p=config.transformations.masking_p,
@@ -199,6 +200,9 @@ if __name__ == "__main__":
             "masking_mode": config.transformations.masking_mode,
             "p_mmaug1": list(config.transformations.mmaug_p)[0],
             "p_mmaug2": list(config.transformations.mmaug_p)[1],
+            "mmaug_a1": config.transformations.mmaug_alpha[0],
+            "mmaug_a2": config.transformations.mmaug_alpha[1],
+            "mmaug_a3": config.transformations.mmaug_alpha[2],
             "p_mmaug_t1": list(config.transformations.mmaug_p_t)[0],
             "p_mmaug_t2": list(config.transformations.mmaug_p_t)[1],
             "data_ssl": config.data_ssl.data_percentage,
@@ -217,6 +221,7 @@ if __name__ == "__main__":
         projector_size=config.barlow_twins.projector_size,
         # mmaug related parameters
         mmaug_p=config.transformations.mmaug_p,
+        mmaug_alpha=config.transformations.mmaug_alpha,
         mmaug_p_t=config.transformations.mmaug_p_t,
         # masking related parameters
         masking_p= config.transformations.masking_p,

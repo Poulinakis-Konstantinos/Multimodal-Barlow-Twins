@@ -18,10 +18,9 @@ import torch.distributions as D
 class MMAug(nn.Module):
     def __init__(
         self,
-        p_modal: (List[float]) = [1.0],# [0.33, 0.33, 0.33],
         p_t_mod: (List[float]) = [1.0], #[1.0, 1.0, 1.0],
         mask_dim: bool = True,
-        alpha: (List[float]) = [0.0],
+        alpha: (List[float]) = [0.15, 0.10, 0.20],
         permute: str = "time",
         replacement: bool = False,
         time_window: Optional[str] = "uniform",
@@ -36,7 +35,6 @@ class MMAug(nn.Module):
         """
         Modified implementation of FeRe in which only one modality at a time is being picked
         Args:
-            p_modal (List[float]): Probability of augmenting each modality
             p_t_mod (List[float]): Resample probabilities for each modality across timesteps.
                 default=1's which means that we resample at every timestep
             mask_dim (bool): copy the same "dimension" across all the timesteps of a given 
@@ -93,11 +91,8 @@ class MMAug(nn.Module):
                 torch.arange(0, self.maxlen)
                 
         # A normal distribution was possibly used in the paper implementation  D.half_normal.HalfNormal(0.01)           
-        self.beta_mod = [D.beta.Beta(self.alpha[0], self.alpha[0])]
+        self.beta_mod = self.set_beta_mod()
 
-        self.which_modal = D.one_hot_categorical.OneHotCategorical(
-            torch.tensor(p_modal)
-        )
 
         # OPTIONAL for the time
         # distribution which defines which timesteps 
@@ -108,6 +103,25 @@ class MMAug(nn.Module):
                 self.get_bernoulli_distribution(float(self.p_t_mod[k]))
             )
 
+
+    def set_beta_mod(self):
+        beta_mod = []
+        self.beta_mod_mean = []
+
+        for feat_alpha in self.alpha:
+            if self.use_beta:
+                print("------------using BEta ------------")
+                beta_mod.append(D.beta.Beta(feat_alpha, feat_alpha))
+                self.beta_mod_mean.append(0)
+            else:
+                # an alternative would be to sample from uniform or half normal
+                # with growing scale, i.e 0.0->loc and 0.4->mean
+                print("----------- Using Half Normal ---------")
+                beta_mod.append(D.half_normal.HalfNormal(0.01))
+                self.beta_mod_mean.append(feat_alpha) # mean of Normal
+        print(f"Beta mod is {beta_mod}")
+
+        return beta_mod
 
     def reset_fere_alpha(self, alpha, verbose=True):
         "alpha here is a list of three values"
@@ -180,12 +194,13 @@ class MMAug(nn.Module):
            # import pdb; pdb.set_trace()
            # print(bsz)
             #print(self.beta_mod[0])
-            # draws a tensor with size bsz, that defines some probs
-            copy_val = self.beta_mod[0].sample((bsz, ))
-            copy_area = [copy_val for _ in range(self.n_modalities)]
 
             for i_modal, p_modal in enumerate(self.p_t_mod):
                 d_modal = mods[i_modal].size(2)
+                
+                # draws a tensor with size bsz, that defines some probs
+                copy_val = self.beta_mod[i_modal].sample((bsz, )) + self.beta_mod_mean[i_modal]
+                copy_area = [copy_val for _ in range(self.n_modalities)]
 
                 # defines a distribution from which we sample 
                 # which feature-dimensions are going 
