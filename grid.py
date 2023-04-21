@@ -16,13 +16,13 @@ if __name__=='__main__':
     with open(config_path) as fp:
         data = yaml.load(fp)
 
-    experiment_name = 'DROP EVAL'
+    experiment_name = 'mmaug'
 
     # Define a search space for the parameters
     params = {'hidden_size': [100], # model
               'num_layers': [1],
               'bidirectional': [False],
-              'dropout': [ 0.0, 0.2, 0.5],
+              'dropout': [0.0], #[ 0.0, 0.2, 0.5],
               'weight_decay_ssl': [0.0],   # optimization
               'weight_decay': [0.0],
               'lr_ssl': [3e-6],
@@ -31,23 +31,29 @@ if __name__=='__main__':
               'alpha': [2e-2], #5e-2, 1e-1],
 
               # SSL transformations 
-              'gauss_noise_p': [[0.0, 0.0]], # [[0.0, 0.0], [0.5, 0.5], [0.7, 0.2], [0.9, 0.1]],
-              'gauss_noise_std': [[0, 0]], # [[1.0, 1.0], [2.0, 2.0], [0.01, 0.01], [0.2, 0.2]],
+              # Gauss Noise
+              'gauss_noise_p': [[0.8, 0.2]], # [[0.0, 0.0], [0.5, 0.5], [0.7, 0.2], [0.9, 0.1]],
+              'gauss_noise_std': [[0.01, 0.01]], # [[1.0, 1.0], [2.0, 2.0], [0.01, 0.01], [0.2, 0.2]],
+              # Masking 
               'masking_p' : [[0.6, 0.6]],# [0.3, 0.0], [1.0, 0.0]], # [[1.0, 0.0], [0.3, 0.0]],
               'mask_percentage': [[0.7,0.2]],#[[0.2, 0.0], [0.5, 0.0],  [0.7, 0.0], [1.0, 0.0]], #[[0.2, 0.2], [0.5, 0.5], [0.7, 0.7], [0.5, 0.2], [0.7, 0.2], [1.0, 0.2], [1.0, 0.7]], 
               'masking_mode': ['timestep'],
-              
+              # MM Aug
+              'mmaug_p': [[1.0, 0.0]],
+              'mmaug_p_t': [[1.0, 0.0], [1.0, 0.0], [1.0, 0.0], [0.8, 0.2], [0.8, 0.2], [0.8, 0.2] ],
+
+
               'batch_size': [32],
               'batch_size_ssl': [170],
 
               'max_epochs': [100],    # epochs for fine tuning                                                   # Standard is 100 with early stopping
-              'max_epochs_ssl':  [1], #[2, 5, 10, 20, 30,  40],   # no early stopping is executed       # Standard is 20
+              'max_epochs_ssl':  [20], #[2, 5, 10, 20, 30,  40],   # no early stopping is executed       # Standard is 20
             
               'data_percentage': [ -1], # -1 for full dataset
               
-              'data_percentage_ssl': [0.1], #[0.001],   # -1 for full , 0.001 for "nothing"
+              'data_percentage_ssl': [-1], #[0.001],   # -1 for full , 0.001 for "nothing"
 
-              'transformation_order': [ ['masking'] ]
+              'transformation_order': [ ['mmaug'], ['mmaug', 'noise']]     # 'mmaug', 'masking' or  'noise'
            }
 
     
@@ -85,11 +91,16 @@ if __name__=='__main__':
 
         # SSL transformations
         data['transformations']['order'] = parameters['transformation_order']
+        # Gauss Noise
         data['transformations']['gauss_noise_p'] = parameters['gauss_noise_p']
         data['transformations']['gauss_noise_std'] = parameters['gauss_noise_std']
+        # Masking
         data['transformations']['masking_p'] = parameters['masking_p']
         data['transformations']['mask_percentage'] = parameters['mask_percentage']
         data['transformations']['masking_mode'] = parameters['masking_mode']
+        # MM Aug
+        data['transformations']['mmaug_p'] = parameters['mmaug_p']
+        data['transformations']['mmaug_p_t'] = parameters['mmaug_p_t']
 
         # save new config values 
         with open(config_path, 'w') as fp:
