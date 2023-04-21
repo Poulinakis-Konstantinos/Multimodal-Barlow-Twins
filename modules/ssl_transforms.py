@@ -114,6 +114,7 @@ class Transformator:
         masking_mode = 'timestep',
         mmaug_p1= 1.0,
         mmaug_p2= 0.0,
+        mmaug_alpha= [0.15, 0.1, 0.2],
         mmaug_p1_t= 1.0,
         mmaug_p2_t= 0.0,
 
@@ -139,6 +140,7 @@ class Transformator:
             masking_percentage_2 (float, optional):  Controls the percentage of time steps masked on input view_2. Defaults to 0.5.
             mmaug_p1 (float, optional): The probability that mmaugment transformation will be applied to (batch) input view_1. Defaults to 1.0.
             mmaug_p2 (float, optional): The probability that mmaugment transformation will be applied to (batch) input view_2. Defaults to 0.0.
+            mmaug_alpha (List[float], optional): The mean of half-normal distribution from which feature pertubation is drawn. Defaults to [0.15, 0.1, 0.2].
             mmag_p1_t (float, optional): Resample probabilities for each modality across timesteps. Default=1's which means that we resample at every timestep Defaults to 1.0.
             mmaug_p2_t (float, optional): Resample probabilities for each modality across timesteps. Default=0's which means that we resample at every timestep Defaults to 1.0.
             p_mod1 (Optional[List[float]], optional): _description_. Defaults to None.
@@ -172,10 +174,10 @@ class Transformator:
             ],
             "mmaug": [
             transforms.RandomApply(
-                [MMAug(p_t_mod=[mmaug_p1_t])], mmaug_p1
+                [MMAug(alpha=mmaug_alpha, p_t_mod=[mmaug_p1_t])], mmaug_p1
                 ),
             transforms.RandomApply(
-                [MMAug(p_t_mod=[mmaug_p2_t])], mmaug_p2
+                [MMAug(alpha=mmaug_alpha, p_t_mod=[mmaug_p2_t])], mmaug_p2
                 )
             ],
         }

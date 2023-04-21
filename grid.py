@@ -16,7 +16,7 @@ if __name__=='__main__':
     with open(config_path) as fp:
         data = yaml.load(fp)
 
-    experiment_name = 'mmaug'
+    experiment_name = "TEST CODE"#'mmaug'
 
     # Define a search space for the parameters
     params = {'hidden_size': [100], # model
@@ -40,6 +40,7 @@ if __name__=='__main__':
               'masking_mode': ['timestep'],
               # MM Aug
               'mmaug_p': [[1.0, 0.0]],
+              'mmaug_alpha': [[0.15, 0.10, 0.20]], 
               'mmaug_p_t': [[1.0, 0.0], [1.0, 0.0], [1.0, 0.0], [0.8, 0.2], [0.8, 0.2], [0.8, 0.2] ],
 
 
@@ -100,6 +101,7 @@ if __name__=='__main__':
         data['transformations']['masking_mode'] = parameters['masking_mode']
         # MM Aug
         data['transformations']['mmaug_p'] = parameters['mmaug_p']
+        data['transformations']['mmaug_alpha'] = parameters['mmaug_alpha']
         data['transformations']['mmaug_p_t'] = parameters['mmaug_p_t']
 
         # save new config values 

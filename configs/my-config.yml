@@ -27,7 +27,6 @@ model:
 transformations:
   order:
   - mmaug
-  - noise
   mm_aug_p:
   - 0.
   - 0.
@@ -51,7 +50,11 @@ transformations:
   - 1.0
   - 0.0
   mmaug_p_t:
-  - 0.8
+  - 1.0
+  - 0.0
+  mmaug_alpha:
+  - 0.15
+  - 0.1
   - 0.2
 barlow_twins:
   alpha: 0.02
@@ -110,7 +113,7 @@ trainer:
   force_wandb_offline: false
   early_stop_on: val_loss
   early_stop_mode: min
-  experiment_name: mmaug
+  experiment_name: TEST CODE
   experiment_description: First trial for MMBT
 
 trainer_ssl:
@@ -129,7 +132,7 @@ trainer_ssl:
   early_stop_on: None
   early_stop_mode: min
   force_wandb_offline: false
-  experiment_name: mmaug
+  experiment_name: TEST CODE
   experiment_description: ' '
 debug: false
 
@@ -172,6 +175,6 @@ modalities:
 - visual
 
 # utils
-run_name: freeze_grads=False_2023-04-21 13:02:19.284422
+run_name: freeze_grads=False_2023-04-21 16:24:18.772270
 
 #config: configs/best.mosei.rnn.symattn.rnn.yml

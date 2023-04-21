@@ -83,6 +83,7 @@ class Multimodal_Barlow_Twins(nn.Module):
         masking_percentage = [1.0, 0.0],
         masking_mode = 'timestep',
         mmaug_p=[1.0, 0.0],
+        mmaug_alpha=[0.15, 0.1, 0.2],
         mmaug_p_t=[1.0, 0.0],
         gauss_noise_p=[0.5, 0.1],
         gauss_noise_m=[0.0, 0.0],
@@ -165,6 +166,7 @@ class Multimodal_Barlow_Twins(nn.Module):
             masking_mode = masking_mode,
             mmaug_p1=mmaug_p[0],
             mmaug_p2=mmaug_p[1],
+            mmaug_alpha=mmaug_alpha,
             mmaug_p1_t=mmaug_p_t[0],
             mmaug_p2_t=mmaug_p_t[1],
         )
