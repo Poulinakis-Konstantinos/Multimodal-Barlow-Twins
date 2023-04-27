@@ -13,7 +13,7 @@ import numpy as np
 import torch.nn as nn
 import torch.distributions.beta as beta
 import torch.distributions as D
-
+from loguru import logger
 
 class MMAug(nn.Module):
     def __init__(
@@ -29,7 +29,7 @@ class MMAug(nn.Module):
         mixup: Optional[bool] = False,
         discard_zero_pad: Optional[bool] = True,
         constant_val: Optional[float] = -1.0,
-        use_beta: Optional[bool] = True,
+        use_beta: Optional[bool] = False,
         single_pick: Optional[bool] = False,
     ):
         """
@@ -129,26 +129,6 @@ class MMAug(nn.Module):
             print(f"Changing fere-alpha from {self.alpha} to {alpha}")
         self.alpha = alpha
         self.beta_mod = self.set_beta_mod()
-
-    ## Can be deleted
-    # def get_timestep_weights(self):
-    #     weights = torch.ones((self.maxlen, self.window_len))
-    #     for i in range(self.maxlen):
-    #         if i - self.window_len//2 < 0:
-    #             weights[i, :(self.window_len//2 - i)] = 0
-    #         if (i + self.window_len // 2) > self.maxlen - 1:
-    #             weights[i, (self.maxlen-1-i-self.window_len//2):] = 0
-    #     if self.time_window == "uniform":
-    #         # import pdb; pdb.set_trace()
-    #         return weights / torch.sum(weights, dim=1).unsqueeze(1)
-    #     else:
-    #         # hann case
-    #         # import pdb; pdb.set_trace()
-    #         hann_weights = \
-    #                 torch.hann_window(window_length=self.window_len + 2,
-    #                                   periodic=False)[1:-1]
-    #         weights = weights * hann_weights
-    #         return weights / torch.sum(weights, dim=1).unsqueeze(1)
 
     @staticmethod
     def get_bernoulli_distribution(zero_out_prob):
@@ -306,6 +286,8 @@ class MMAug(nn.Module):
                         + (1 - area_mask) * tmp_tensor) * (1 - modal_timestep_mask) \
                         + mods[i_modal] * modal_timestep_mask
 
+            # logger.debug(f"Alpha is {self.alpha}")
+            # logger.debug(f"Beta distr is {self.beta_mod} and mean {self.beta_mod_mean}")
 
             return mods
 
